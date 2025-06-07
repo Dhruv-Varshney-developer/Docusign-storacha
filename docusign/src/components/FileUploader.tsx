@@ -8,6 +8,7 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
   const [loading, setLoading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploaded, setIsUploaded] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -79,6 +80,13 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
 
       const result = await res.json();
       console.log("file running this here after fetch", result);
+
+      if (result.success) {
+        onUploadSuccess(result.data);
+        setIsUploaded(true);
+      } else {
+        onUploadError(result.error);
+      }
       if (result.success) onUploadSuccess(result.data);
       else onUploadError(result.error);
     } catch (err: any) {
@@ -102,12 +110,16 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
                 ? "border-green-500 bg-green-50"
                 : "border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50"
             }
-            ${loading ? "opacity-50 pointer-events-none" : "cursor-pointer"}
+            ${
+              loading || isUploaded
+                ? "opacity-50 pointer-events-none"
+                : "cursor-pointer"
+            }
           `}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          onClick={!file ? handleBrowseClick : undefined}
+          onClick={!file && !isUploaded ? handleBrowseClick : undefined}
         >
           <input
             ref={fileInputRef}
@@ -115,7 +127,7 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
             accept="application/pdf"
             onChange={handleFileSelect}
             className="hidden"
-            disabled={loading}
+            disabled={loading || isUploaded}
           />
 
           {!file ? (
@@ -152,7 +164,7 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
               <button
                 type="button"
                 onClick={handleRemoveFile}
-                disabled={loading}
+                disabled={loading || isUploaded}
                 className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <X className="w-4 h-4 mr-1" />
@@ -166,7 +178,7 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={loading || !file}
+          disabled={loading || !file || isUploaded}
           className={`
             w-full flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-lg text-white transition-all duration-200 ease-in-out
             ${
