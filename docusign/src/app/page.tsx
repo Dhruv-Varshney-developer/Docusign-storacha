@@ -3,7 +3,7 @@
 import { useState } from "react";
 import FileUploader from "@/components/FileUploader";
 import UploadResult from "@/components/UploadResult";
-
+import { RoleBasedAccessComponent } from "@/components/RolesComponent";
 export default function Home() {
   const [uploadResult, setUploadResult] = useState(null);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +24,8 @@ export default function Home() {
         }}
       />
       {uploadResult && <UploadResult result={uploadResult} />}
+       {/*Assigning Role Based Acess */}
+       {uploadResult !== null &&  <RoleBasedAccessComponent result={uploadResult} />}
     </main>
   );
 }
