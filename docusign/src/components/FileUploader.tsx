@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload, File, X, Loader2 } from "lucide-react";
+import { RoleBasedAccessComponent } from "./RolesComponent";
 
 export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
   const [file, setFile] = useState<File | null>(null);
@@ -9,6 +10,7 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploaded, setIsUploaded] = useState(false);
+  const [fileCid, setFileCid]=useState<string>("");
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -19,6 +21,10 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
     e.preventDefault();
     setIsDragOver(false);
   }, []);
+
+useEffect(()=>{
+  
+},[isUploaded, fileCid])
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -83,6 +89,7 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
 
       if (result.success) {
         onUploadSuccess(result.data);
+        setFileCid(result.data.cid)
         setIsUploaded(true);
       } else {
         onUploadError(result.error);
@@ -173,7 +180,7 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
             </div>
           )}
         </div>
-
+      
         {/* Upload Button */}
         <button
           type="button"
@@ -200,6 +207,8 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
             </>
           )}
         </button>
+
+       
       </div>
     </div>
   );

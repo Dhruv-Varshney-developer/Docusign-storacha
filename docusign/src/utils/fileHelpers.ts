@@ -4,3 +4,5 @@ export function validateFile(file: File) {
     return { isValid: false, error: "Only PDF files are allowed." };
   return { isValid: true, error: null };
 }
+
+export const baseCapabilities = ["store/remove", "store/add", "access/secret"];
