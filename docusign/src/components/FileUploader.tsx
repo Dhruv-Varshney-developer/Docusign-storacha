@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload, File, X, Loader2 } from "lucide-react";
-import { RoleBasedAccessComponent } from "./RolesComponent";
 
 export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
   const [file, setFile] = useState<File | null>(null);

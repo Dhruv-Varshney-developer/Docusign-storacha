@@ -5,4 +5,5 @@ export function validateFile(file: File) {
   return { isValid: true, error: null };
 }
 
-export const baseCapabilities = ["store/remove", "store/add", "access/secret"];
+export const baseCapabilities = ['access/verify', 'upload/add'];
+// export const baseCapabilities = ['file/link', 'file/read'];
