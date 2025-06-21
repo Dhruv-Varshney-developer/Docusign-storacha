@@ -11,3 +11,10 @@ export interface PDFViewerProps {
   fileUrl?: string;
   height?: string;
 }
+
+
+export interface Signer{
+  did: string;
+  capabilities: string[];
+  deadline:string;
+};

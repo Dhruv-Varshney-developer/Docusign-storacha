@@ -1,0 +1,41 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createUCANDelegation } from "@/lib/storacha";
+import { Signer } from "@/types/types";
+
+export const runtime = "nodejs";
+
+export async function POST(req: NextRequest) {
+try {
+    const body = await req.json();
+    
+    const { cid, signers} = body;
+    const result=await Promise.all(signers.map(async (item:Signer)=>{
+        const delegationResult=await createUCANDelegation({
+            recipientDID:item.did,
+            baseCapabilities:item.capabilities,
+            deadline:Number(item.deadline),
+            fileCID:cid
+        })
+        const delegationBase64ToSendToFrontend = Buffer.from(delegationResult).toString("base64");
+        return {
+            receipientDid:item.did,
+            delegationBase64ToSendToFrontend
+        };
+    }))
+
+    
+    return NextResponse.json(
+          { success: true, message: "Data received successfully", data: { cid,
+             signers,
+             delegationResult:result
+            } },
+          { status: 200 }
+    );
+    } catch (error) {
+        console.log("The error is",error)
+        return NextResponse.json(
+          { success: false, error: "Invalid JSON or malformed request" },
+          { status: 400 }
+        );
+    }
+}

@@ -3,7 +3,10 @@
 import * as Client from "@web3-storage/w3up-client";
 import { StoreMemory } from "@web3-storage/w3up-client/stores/memory";
 import * as Proof from "@web3-storage/w3up-client/proof";
-import { Signer } from "@web3-storage/w3up-client/principal/ed25519";
+import * as Delegation from '@ucanto/core/delegation'
+import * as DID from '@ipld/dag-ucan/did'
+import {Signer, Capabilities } from "@web3-storage/w3up-client/principal/ed25519";
+import { Link } from "@ucanto/core/schema";
 
 export async function initStorachaClient() {
   const principal = Signer.parse(process.env.STORACHA_KEY!);
@@ -32,3 +35,48 @@ export async function uploadFileToStoracha(client: Client.Client, file: File) {
     throw new Error("Failed to upload file: " + error.message);
   }
 }
+
+
+export const createUCANDelegation = async ({
+  recipientDID,
+  deadline,
+  fileCID
+}:{
+  recipientDID : string,
+  deadline : number,
+  baseCapabilities: string[],
+  fileCID:string
+}):Promise<Uint8Array> => {
+  try {
+    const client = await initStorachaClient();
+    const spaceDID = client.agent.did();
+    const audience = DID.parse(recipientDID);
+    const agent = client.agent;
+    const capabilities : Capabilities = [{  
+      with:`${spaceDID}`,
+      can: `upload/get`,
+      nb: {
+        root:Link.parse(fileCID)
+      },
+    }];
+
+    const ucan = await Delegation.delegate({
+      issuer: agent.issuer,
+      audience,
+      expiration: deadline,
+      capabilities
+    })
+    const cid = await ucan.cid;
+    console.log("The cid of delegation is", cid);
+    const archive = await ucan.archive();
+    if (!archive.ok) {
+      throw new Error('Failed to create delegation archive');
+    }
+    console.log('Delegation archive created successfully', archive.ok,  cid);
+    return archive.ok
+  } catch (err) {
+    console.error('Error creating UCAN delegation:', err);
+    throw err;
+  }
+};
+
