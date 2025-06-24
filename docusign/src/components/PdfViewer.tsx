@@ -32,7 +32,6 @@ export default function PDFViewer({
       const cidFromUrl = urlParams.get("cid");
 
       if (cidFromUrl && !autoLoaded) {
-        console.log("Found CID in URL:", cidFromUrl);
 
         // Set the CID in the input
         setCid(cidFromUrl);
