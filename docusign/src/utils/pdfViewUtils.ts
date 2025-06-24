@@ -6,7 +6,6 @@ export const validateCid = (cidString: string): boolean => {
 
   // Basic CID validation - starts with common CID prefixes
   const cidPrefixes = ["Qm", "baf", "bag", "bah", "bai"];
-  console.log(cidString);
   return (
     cidPrefixes.some((prefix) => cidString.startsWith(prefix)) &&
     cidString.length >= 46

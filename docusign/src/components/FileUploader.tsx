@@ -76,15 +76,12 @@ useEffect(()=>{
 
     try {
       setLoading(true);
-
-      console.log("file running this here before fetch", file);
       const res = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
 
       const result = await res.json();
-      console.log("file running this here after fetch", result);
 
       if (result.success) {
         onUploadSuccess(result.data);

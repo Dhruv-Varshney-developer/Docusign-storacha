@@ -88,12 +88,6 @@ export const RoleBasedAccessComponent = ({ result }: { result: any }) => {
             (c) => c.charCodeAt(0)
           );
           Delegation.extract(delegationBuffer).then((extractedDelegation) => {
-            console.log(
-              "Delegation for",
-              receipientDid,
-              ":",
-              extractedDelegation.ok
-            );
           });
           return {
             recipientDid: receipientDid,

@@ -66,13 +66,10 @@ export const createUCANDelegation = async ({
       expiration: deadline,
       capabilities
     })
-    const cid = await ucan.cid;
-    console.log("The cid of delegation is", cid);
     const archive = await ucan.archive();
     if (!archive.ok) {
       throw new Error('Failed to create delegation archive');
     }
-    console.log('Delegation archive created successfully', archive.ok,  cid);
     return archive.ok
   } catch (err) {
     console.error('Error creating UCAN delegation:', err);
