@@ -10,6 +10,7 @@ export interface DocumentMetadata {
 export interface PDFViewerProps {
   fileUrl?: string;
   height?: string;
+  signer:boolean;
 }
 
 export interface Signer {

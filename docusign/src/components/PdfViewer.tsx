@@ -14,6 +14,7 @@ import PdfDisplay from "./PdfDisplay";
 export default function PDFViewer({
   fileUrl: initialFileUrl,
   height = "750px",
+  signer=false
 }: PDFViewerProps) {
   const [cid, setCid] = useState("");
   const [fileUrl, setFileUrl] = useState(initialFileUrl || "");
@@ -123,6 +124,7 @@ export default function PDFViewer({
       setFileUrl(newUrl);
     } catch (err) {
       setError("Failed to load PDF. Please check the CID and try again.");
+      console.log(err)
       setIsLoadingMetadata(false);
     } finally {
       setIsLoading(false);
@@ -145,7 +147,10 @@ export default function PDFViewer({
 
   return (
     <div className="w-full max-w-6xl mx-auto bg-white">
-      <CidInput
+      
+    { !signer &&
+      <>
+       <CidInput
         cid={cid}
         setCid={setCid}
         isValidCid={isValidCid}
@@ -161,7 +166,7 @@ export default function PDFViewer({
         isLoading={isLoadingMetadata}
         error={error}
       />
-
+        </>}
       {fileUrl && !error && (
         <PdfDisplay
           fileUrl={fileUrl}
@@ -169,7 +174,8 @@ export default function PDFViewer({
           onDocumentLoad={handleDocumentLoad}
           onDocumentError={handleDocumentError}
         />
-      )}
+      )
+      }
     </div>
   );
 }
