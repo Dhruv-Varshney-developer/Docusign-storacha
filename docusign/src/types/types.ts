@@ -12,9 +12,19 @@ export interface PDFViewerProps {
   height?: string;
 }
 
-
-export interface Signer{
+export interface Signer {
+  notBefore: any;
   did: string;
   capabilities: string[];
-  deadline:string;
-};
+  deadline: string;
+}
+
+export interface DecodedDelegation {
+  audience: string;
+  issuer: string;
+  capabilities: any[];
+  expiration: Date;
+  notBefore?: Date;
+  isValid: boolean;
+  status: "valid" | "expired" | "not-yet-valid";
+}

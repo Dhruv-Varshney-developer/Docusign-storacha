@@ -6,34 +6,62 @@ import * as Delegation from "@ucanto/core/delegation";
 import { DelegationSuccessMessage } from "./DelegationSuccessComp";
 import jsPDF from "jspdf";
 
+type LocalSigner = {
+  did: string;
+  capabilities: string[];
+  deadline: string; // datetime-local
+  startTime?: string; // datetime-local (optional, for override)
+};
+
 export const RoleBasedAccessComponent = ({ result }: { result: any }) => {
   const [numSigners, setNumSigners] = useState(1);
-  const [signers, setSigners] = useState<Signer[]>([
-    { did: "", capabilities: [] as string[], deadline: "" },
+  const [signers, setSigners] = useState<LocalSigner[]>([
+    { did: "", capabilities: [], deadline: "", startTime: "" },
   ]);
   const [delegated, setDelegated] = useState<boolean>(false);
 
   const handleSignerCountChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const count = parseInt(e.target.value);
     setNumSigners(count);
+
     const updatedSigners = Array.from(
       { length: count },
-      (_, i) => signers[i] || { did: "", capabilities: [], deadline: "" }
+      (_, i) =>
+        signers[i] || { did: "", capabilities: [], deadline: "", startTime: "" }
     );
+
     setSigners(updatedSigners);
   };
 
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const toLocalDatetime = (d: Date) =>
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+      d.getHours()
+    )}:${pad(d.getMinutes())}`;
+
   const updateSignerField = (
     index: number,
-    field: "did" | "capabilities" | "deadline",
+    field: "did" | "capabilities" | "deadline" | "startTime",
     value: string | string[]
   ) => {
     const updated = [...signers];
+
     if (field === "capabilities" && Array.isArray(value)) {
       updated[index].capabilities = value;
     } else if (field !== "capabilities" && typeof value === "string") {
       updated[index][field] = value;
+
+      // Always auto-update next signer's startTime when current deadline changes
+      if (field === "deadline") {
+        const deadline = new Date(value);
+        if (!isNaN(deadline.getTime()) && index + 1 < updated.length) {
+          const nextStartTime = new Date(deadline.getTime() + 1 * 60 * 1000); // +1 min
+          const local = toLocalDatetime(nextStartTime);
+          updated[index + 1].startTime = local; // ✅ always update
+        }
+      }
     }
+
     setSigners(updated);
   };
 
@@ -50,13 +78,64 @@ export const RoleBasedAccessComponent = ({ result }: { result: any }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Convert to datetime and sort signers by start time
+    const parsedSigners = signers.map((signer, idx) => ({
+      ...signer,
+      index: idx + 1,
+      start: new Date(signer.startTime ?? ""),
+      end: new Date(signer.deadline),
+    }));
+
+    const errors: string[] = [];
+
+    // Validate individual signer time logic
+    for (const signer of parsedSigners) {
+      if (
+        !signer.start ||
+        !signer.end ||
+        isNaN(signer.start.getTime()) ||
+        isNaN(signer.end.getTime())
+      ) {
+        errors.push(`Signer ${signer.index}: Invalid start or end time.`);
+        continue;
+      }
+      if (signer.start >= signer.end) {
+        errors.push(
+          `Signer ${signer.index}: Start time must be before deadline.`
+        );
+      }
+    }
+
+    // Sort by start time for chaining logic
+    parsedSigners.sort((a, b) => a.start.getTime() - b.start.getTime());
+
+    // Chain enforcement & overlap detection
+    for (let i = 0; i < parsedSigners.length - 1; i++) {
+      const current = parsedSigners[i];
+      const next = parsedSigners[i + 1];
+
+      const minNextStart = new Date(current.end.getTime() + 60 * 1000); // +1 minute
+      if (next.start.getTime() < minNextStart.getTime()) {
+        errors.push(
+          `Signer ${current.index} and Signer ${next.index} have overlapping timeframes or gap < 1 min.`
+        );
+      }
+    }
+
+    if (errors.length > 0) {
+      alert("Delegation validation failed:\n\n" + errors.join("\n"));
+      return;
+    }
+
     try {
-      const formattedSigners: Signer[] = signers.map((signer) => ({
+      const formattedSigners: Signer[] = parsedSigners.map((signer) => ({
         did: signer.did,
         capabilities: signer.capabilities,
-        deadline: Math.floor(
-          new Date(signer.deadline).getTime() / 1000
-        ).toString(),
+        deadline: Math.floor(signer.end.getTime() / 1000).toString(),
+        notBefore: signer.start
+          ? Math.floor(signer.start.getTime() / 1000).toString()
+          : undefined,
       }));
 
       const payload = {
@@ -64,6 +143,7 @@ export const RoleBasedAccessComponent = ({ result }: { result: any }) => {
         numSigners,
         signers: formattedSigners,
       };
+
       const res = await fetch("/api/Delegate", {
         method: "POST",
         headers: {
@@ -71,10 +151,10 @@ export const RoleBasedAccessComponent = ({ result }: { result: any }) => {
         },
         body: JSON.stringify(payload),
       });
+
       const response = await res.json();
       const { delegationResult } = response.data;
 
-      //Storing the Generated Delegation Directly in the localStorage of the user so that they can be shared to the respective agent to be used by them.
       const savedDelegations = delegationResult.map(
         ({
           receipientDid,
@@ -83,22 +163,20 @@ export const RoleBasedAccessComponent = ({ result }: { result: any }) => {
           receipientDid: string;
           delegationBase64ToSendToFrontend: string;
         }) => {
-          const delegationBuffer = Uint8Array.from(
-            atob(delegationBase64ToSendToFrontend),
-            (c) => c.charCodeAt(0)
-          );
-          Delegation.extract(delegationBuffer).then((extractedDelegation) => {
-          });
           return {
             recipientDid: receipientDid,
             delegation: delegationBase64ToSendToFrontend,
           };
         }
       );
-      // Saving to localStorage using fileCid as key
-      const storageKey = `delegations:${result.cid}`;
-      localStorage.setItem(storageKey, JSON.stringify(savedDelegations));
+
+      localStorage.setItem(
+        `delegations:${result.cid}`,
+        JSON.stringify(savedDelegations)
+      );
+
       setDelegated(true);
+
       const doc = new jsPDF();
       const readableText = JSON.stringify(savedDelegations, null, 2);
       const lines = doc.splitTextToSize(readableText, 180);
@@ -113,11 +191,10 @@ export const RoleBasedAccessComponent = ({ result }: { result: any }) => {
       );
       const formData = new FormData();
       formData.append("file", delegationFileObject);
-      const storeProofresponse = await fetch("/api/upload", {
+      await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
-      const uploadResult = await storeProofresponse.json();
     } catch (err) {
       console.error("Failed to send data to backend:", err);
     }
@@ -209,7 +286,20 @@ export const RoleBasedAccessComponent = ({ result }: { result: any }) => {
                 ))}
               </div>
             </div>
-
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Access Start Time (Not Before)
+              </label>
+              <input
+                type="datetime-local"
+                value={signer.startTime}
+                onChange={(e) =>
+                  updateSignerField(idx, "startTime", e.target.value)
+                }
+                className="w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                required
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Access Deadline
