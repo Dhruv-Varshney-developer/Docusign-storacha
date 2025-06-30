@@ -8,7 +8,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { cid, signers } = body;
-    const now = Math.floor(Date.now() / 1000); // Not before (current time)
 
     const result = await Promise.all(
       signers.map(async (item: Signer) => {
@@ -43,7 +42,6 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.log("The error is", error);
     return NextResponse.json(
       { success: false, error: "Invalid JSON or malformed request" },
       { status: 400 }

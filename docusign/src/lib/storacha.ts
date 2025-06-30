@@ -43,7 +43,7 @@ export async function uploadFileToStoracha(client: Client.Client, file: File) {
 type DelegationInput = {
   recipientDID: string;
   deadline: number; // expiration timestamp (seconds)
-  notBefore?: number; // optional "not valid before" timestamp (seconds)
+  notBefore?: number; // "not valid before" timestamp (seconds)
   baseCapabilities: string[];
   fileCID: string;
 };
@@ -73,7 +73,7 @@ export const createUCANDelegation = async ({
       issuer: agent.issuer,
       audience,
       expiration: deadline,
-      notBefore, // optional field
+      notBefore,
       capabilities,
     });
 

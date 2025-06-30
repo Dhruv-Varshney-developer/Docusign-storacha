@@ -42,17 +42,6 @@ export async function decodeDelegation(
       isValid = false;
     }
 
-    // Log for debugging (you can remove these in production)
-    console.log("Audience:", audience);
-    console.log("Issuer:", issuer);
-    console.log("Capabilities:", capabilities);
-    console.log("Expiration:", expiration.getTime() / 1000);
-    console.log(
-      "Not Before:",
-      notBefore ? notBefore.getTime() / 1000 : "undefined"
-    );
-    console.log("Status:", status);
-
     return {
       audience,
       issuer,

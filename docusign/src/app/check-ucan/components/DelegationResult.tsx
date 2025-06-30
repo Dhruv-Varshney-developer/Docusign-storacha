@@ -1,4 +1,3 @@
-// components/DelegationResult.tsx
 "use client";
 
 import { DecodedDelegation } from "@/types/types";
