@@ -5,37 +5,46 @@ import { Signer } from "@/types/types";
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-try {
+  try {
     const body = await req.json();
-    
-    const { cid, signers} = body;
-    const result=await Promise.all(signers.map(async (item:Signer)=>{
-        const delegationResult=await createUCANDelegation({
-            recipientDID:item.did,
-            baseCapabilities:item.capabilities,
-            deadline:Number(item.deadline),
-            fileCID:cid
-        })
-        const delegationBase64ToSendToFrontend = Buffer.from(delegationResult).toString("base64");
-        return {
-            receipientDid:item.did,
-            delegationBase64ToSendToFrontend
-        };
-    }))
+    const { cid, signers } = body;
 
-    
-    return NextResponse.json(
-          { success: true, message: "Data received successfully", data: { cid,
-             signers,
-             delegationResult:result
-            } },
-          { status: 200 }
+    const result = await Promise.all(
+      signers.map(async (item: Signer) => {
+        const delegationResult = await createUCANDelegation({
+          recipientDID: item.did,
+          baseCapabilities: item.capabilities,
+          deadline: Number(item.deadline),
+          notBefore: item.notBefore ? Number(item.notBefore) : undefined,
+          fileCID: cid,
+        });
+
+        const delegationBase64ToSendToFrontend =
+          Buffer.from(delegationResult).toString("base64");
+
+        return {
+          receipientDid: item.did,
+          delegationBase64ToSendToFrontend,
+        };
+      })
     );
-    } catch (error) {
-        console.log("The error is",error)
-        return NextResponse.json(
-          { success: false, error: "Invalid JSON or malformed request" },
-          { status: 400 }
-        );
-    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Data received successfully",
+        data: {
+          cid,
+          signers,
+          delegationResult: result,
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: "Invalid JSON or malformed request" },
+      { status: 400 }
+    );
+  }
 }

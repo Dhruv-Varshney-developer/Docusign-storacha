@@ -3,9 +3,12 @@
 import * as Client from "@web3-storage/w3up-client";
 import { StoreMemory } from "@web3-storage/w3up-client/stores/memory";
 import * as Proof from "@web3-storage/w3up-client/proof";
-import * as Delegation from '@ucanto/core/delegation'
-import * as DID from '@ipld/dag-ucan/did'
-import {Signer, Capabilities } from "@web3-storage/w3up-client/principal/ed25519";
+import * as Delegation from "@ucanto/core/delegation";
+import * as DID from "@ipld/dag-ucan/did";
+import {
+  Signer,
+  Capabilities,
+} from "@web3-storage/w3up-client/principal/ed25519";
 import { Link } from "@ucanto/core/schema";
 
 export async function initStorachaClient() {
@@ -16,6 +19,7 @@ export async function initStorachaClient() {
   const proof = await Proof.parse(process.env.STORACHA_PROOF!);
   const space = await client.addSpace(proof);
   await client.setCurrentSpace(space.did());
+
   return client;
 }
 
@@ -36,44 +40,51 @@ export async function uploadFileToStoracha(client: Client.Client, file: File) {
   }
 }
 
+type DelegationInput = {
+  recipientDID: string;
+  deadline: number; // expiration timestamp (seconds)
+  notBefore?: number; // "not valid before" timestamp (seconds)
+  baseCapabilities: string[];
+  fileCID: string;
+};
 
 export const createUCANDelegation = async ({
   recipientDID,
   deadline,
-  fileCID
-}:{
-  recipientDID : string,
-  deadline : number,
-  baseCapabilities: string[],
-  fileCID:string
-}):Promise<Uint8Array> => {
+  notBefore,
+  baseCapabilities,
+  fileCID,
+}: DelegationInput): Promise<Uint8Array> => {
   try {
     const client = await initStorachaClient();
     const spaceDID = client.agent.did();
     const audience = DID.parse(recipientDID);
     const agent = client.agent;
-    const capabilities : Capabilities = [{  
-      with:`${spaceDID}`,
-      can: `upload/get`,
+
+    const capabilities: Capabilities = baseCapabilities.map((can) => ({
+      with: `${spaceDID}`,
+      can,
       nb: {
-        root:Link.parse(fileCID)
+        root: Link.parse(fileCID),
       },
-    }];
+    })) as Capabilities;
 
     const ucan = await Delegation.delegate({
       issuer: agent.issuer,
       audience,
       expiration: deadline,
-      capabilities
-    })
+      notBefore,
+      capabilities,
+    });
+
     const archive = await ucan.archive();
     if (!archive.ok) {
-      throw new Error('Failed to create delegation archive');
+      throw new Error("Failed to create delegation archive");
     }
-    return archive.ok
+
+    return archive.ok;
   } catch (err) {
-    console.error('Error creating UCAN delegation:', err);
+    console.error("Error creating UCAN delegation:", err);
     throw err;
   }
 };
-
