@@ -2,13 +2,25 @@ import { useState } from "react";
 import { CheckCircle } from "lucide-react";
 
 export default function UploadResult({ result }: any) {
-  const [copied, setCopied] = useState(false);
+  const [copiedURL, setCopiedURL] = useState(false);
+  const [copiedCID, setCopiedCID] = useState(false);
 
-  const copyToClipboard = async (text: string) => {
+
+  const copyURLToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedURL(true);
+      setTimeout(() => setCopiedURL(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  const copyCIDToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedCID(true);
+      setTimeout(() => setCopiedCID(false), 2000);
     } catch (err) {
       console.error("Failed to copy:", err);
     }
@@ -63,14 +75,29 @@ export default function UploadResult({ result }: any) {
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium text-gray-700">CID:</span>
               <button
-                onClick={() => copyToClipboard(result.cid)}
+                onClick={() => copyCIDToClipboard(result.cid)}
                 className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
               >
-                {copied ? "Copied!" : "Copy"}
+                {copiedCID ? "Copied!" : "Copy"}
               </button>
             </div>
             <code className="text-xs bg-gray-100 px-2 py-1 rounded border block break-all">
               {result.cid}
+            </code>
+          </div>
+
+          <div className="py-2 border-b border-gray-100">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-700">URL:</span>
+              <button
+                onClick={() => copyURLToClipboard(result.url)}
+                className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+              >
+                {copiedURL ? "Copied!" : "Copy"}
+              </button>
+            </div>
+            <code className="text-xs bg-gray-100 px-2 py-1 rounded border block break-all">
+              {result.url}
             </code>
           </div>
 
@@ -79,7 +106,7 @@ export default function UploadResult({ result }: any) {
               IPFS URL:
             </span>
             <a
-              href={"/view-pdf?cid=" + result.cid}
+              href={"/view-pdf?file=" + result.url}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"

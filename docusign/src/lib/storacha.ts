@@ -25,13 +25,16 @@ export async function initStorachaClient() {
 
 export async function uploadFileToStoracha(client: Client.Client, file: File) {
   try {
-    const cid = await client.uploadFile(file);
+    const files = [new File([file], file.name, { type: file.type })];
+
+    const cid = await client.uploadDirectory(files);
+
     return {
       cid: cid.toString(),
       filename: file.name,
       size: file.size,
       type: file.type,
-      url: `https://w3s.link/ipfs/${cid}`,
+      url: `https://w3s.link/ipfs/${cid}/${file.name}`, // direct access of file
       uploadedAt: new Date().toISOString(),
     };
   } catch (error: any) {
@@ -39,6 +42,7 @@ export async function uploadFileToStoracha(client: Client.Client, file: File) {
     throw new Error("Failed to upload file: " + error.message);
   }
 }
+
 
 type DelegationInput = {
   recipientDID: string;
