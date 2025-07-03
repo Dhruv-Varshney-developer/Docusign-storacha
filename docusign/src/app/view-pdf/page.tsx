@@ -16,7 +16,7 @@ export default function Home() {
         <PDFViewer height="800px" signer={false}/>
 
         <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Enter a valid IPFS CID above to view the PDF document</p>
+          <p>Enter a valid IPFS URL above to view the PDF document</p>
         </div>
       </div>
     </div>
