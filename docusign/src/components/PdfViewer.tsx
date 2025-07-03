@@ -117,7 +117,6 @@ export default function PDFViewer({
 
   return (
     <div className="w-full max-w-6xl mx-auto bg-white">
-
       <FileUrlInput
         fileUrl={fileUrl}
         setFileUrl={setFileUrl}
@@ -133,7 +132,7 @@ export default function PDFViewer({
         isLoading={isLoadingMetadata}
         error={error}
       />
-        </>}
+
       {fileUrl && !error && (
         <PdfDisplay
           fileUrl={fileUrl}
@@ -141,8 +140,7 @@ export default function PDFViewer({
           onDocumentLoad={handleDocumentLoad}
           onDocumentError={handleDocumentError}
         />
-      )
-      }
+      )}
     </div>
   );
 }

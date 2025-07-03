@@ -4,10 +4,12 @@
 import PDFViewer from "@/components/PdfViewer";
 import { useState, useRef } from "react";
 import SignatureCanvas from "react-signature-canvas";
+import jsPDF from "jspdf";
 
 type SignatureProps = {
   documentId: string;
   userDid:string;
+  fileName:string;
 };
 
 type SignatureData = {
@@ -15,10 +17,10 @@ type SignatureData = {
   signedAt: string;
   documentId: string;
   signatureHash: string;
-
+  fileName:string;
 };
 
-export const SignatureBox = ({ documentId, userDid }: SignatureProps) => {
+export const SignatureBox = ({ documentId, userDid, fileName }: SignatureProps) => {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [signing, setSigning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,6 @@ export const SignatureBox = ({ documentId, userDid }: SignatureProps) => {
 
   const sigPadRef = useRef<any>(null);
 
-  // Hashing function combining PDF + Signature
   async function generateHashFromPDFAndSignature(
     pdfUrl: string,
     signatureDataUrl: string
@@ -46,45 +47,53 @@ export const SignatureBox = ({ documentId, userDid }: SignatureProps) => {
     const hashHex = Array.from(new Uint8Array(hashBuffer))
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
-
-      console.log("The hash is", hashHex)
     return hashHex;
   }
 
   const handleSign = async () => {
-    console.log("i got called")
-    console.log("i got signing")
     if (sigPadRef.current.isEmpty()) {
       setError("Please provide a signature.");
       return;
     }
-    console.log("i got not empty")
     setSigning(true);
     setError(null);
     setIsAuthorized(true);
    const signatureDataUrl = sigPadRef.current.getCanvas().toDataURL("image/png");
-   console.log("The signature is", signatureDataUrl)
 
     try {
       const hash = await generateHashFromPDFAndSignature(
-        `https://${documentId}.ipfs.w3s.link/`,
+        `https://${documentId}.ipfs.w3s.link/${fileName}`,
         signatureDataUrl
       );
 
       const signature: SignatureData = {
-        signer: userDid, // Replace with dynamic user
+        signer: userDid,
         signedAt: new Date().toISOString(),
         documentId,
+        fileName:fileName,
         signatureHash: hash,
       };
 
-      // await fetch("/api/save-signature", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(signature),
-      // });
+    const doc = new jsPDF();
+    const jsonText = JSON.stringify(signature, null, 2); 
+    const lines = doc.splitTextToSize(jsonText, 180);
+    doc.text(lines, 10, 20);
 
-      console.log("Saving signature:", signature);
+    const pdfBlob = doc.output("blob");
+    const file = new File(
+      [pdfBlob],
+      `${userDid}-${documentId}-${fileName}.pdf`,
+      { type: "application/pdf" }
+    );
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) throw new Error("Upload failed");
+
       setSignatureSaved(true);
     } catch (err) {
       console.error("Signature save error:", err);
@@ -97,7 +106,7 @@ export const SignatureBox = ({ documentId, userDid }: SignatureProps) => {
   return (
     <div className="p-4 border rounded shadow flex flex-col items-center gap-4">
       <PDFViewer
-        fileUrl={`https://${documentId}.ipfs.w3s.link/`}
+        fileUrl={`https://w3s.link/ipfs/${documentId}/${fileName}`}
         signer={true}
         onLoad={() => setDocVisible(true)}
       />
