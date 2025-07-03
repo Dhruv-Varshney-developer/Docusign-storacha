@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -14,7 +15,8 @@ import PdfDisplay from "./PdfDisplay";
 export default function PDFViewer({
   fileUrl: initialFileUrl,
   height = "750px",
-  signer=false
+  signer=false,
+  onLoad
 }: PDFViewerProps) {
   const [cid, setCid] = useState("");
   const [fileUrl, setFileUrl] = useState(initialFileUrl || "");
@@ -63,10 +65,15 @@ export default function PDFViewer({
             // Fetch metadata
             const docMetadata = await fetchMetadata(cidFromUrl);
             setMetadata(docMetadata);
+             if(onLoad!==undefined){
+              console.log("setting load true")
+              onLoad()
+             }
             setIsLoadingMetadata(false);
 
             setFileUrl(newUrl);
           } catch (err) {
+            
             setError("Failed to load PDF. Please check the CID and try again.");
             setIsLoadingMetadata(false);
           } finally {

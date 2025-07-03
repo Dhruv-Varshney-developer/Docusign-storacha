@@ -113,7 +113,7 @@ export default function UCANChecker() {
         {result && <DelegationResult result={result} setFile={setFileCid} />}
 
         {  
-          result && fileCid!=="" && <SignatureBox documentId={fileCid}/>
+          result && fileCid!=="" && <SignatureBox documentId={fileCid} userDid={result.audience}/>
         }
       </div>
     </div>
