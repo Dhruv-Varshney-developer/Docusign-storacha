@@ -7,7 +7,7 @@ import {
   fetchMetadata,
 } from "@/utils/pdfViewUtils";
 import { DocumentMetadata, PDFViewerProps } from "@/types/types";
-import CidInput from "./CidInput";
+import FileUrlInput from "./FileUrlInput";
 import Metadata from "./Metadata";
 import PdfDisplay from "./PdfDisplay";
 
@@ -23,111 +23,80 @@ export default function PDFViewer({
   const [metadata, setMetadata] = useState<DocumentMetadata | null>(null);
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
   const [autoLoaded, setAutoLoaded] = useState(false);
+  const [filename, setFilename] = useState("");
 
   // Auto-load PDF from URL parameters
   useEffect(() => {
     const loadFromUrl = async () => {
-      // Get URL parameters
       const urlParams = new URLSearchParams(window.location.search);
-      const cidFromUrl = urlParams.get("cid");
+      const fileUrlParam = urlParams.get("file");
 
-      if (cidFromUrl && !autoLoaded) {
-
-        // Set the CID in the input
-        setCid(cidFromUrl);
-
-        // Validate the CID
-        const isValid = validateCid(cidFromUrl);
-        setIsValidCid(isValid);
-
-        if (isValid) {
-          // Auto-click the view button
-          setAutoLoaded(true);
-          setIsLoading(true);
-          setIsLoadingMetadata(true);
-          setError(null);
-
-          try {
-            const newUrl = `https://${cidFromUrl}.ipfs.w3s.link/`;
-
-            // Validate if it's a PDF
-            const isPdf = await validatePdfUrl(newUrl);
-            if (!isPdf) {
-              setError("The CID does not point to a PDF file");
-              setIsLoading(false);
-              setIsLoadingMetadata(false);
-              return;
-            }
-
-            // Fetch metadata
-            const docMetadata = await fetchMetadata(cidFromUrl);
-            setMetadata(docMetadata);
-            setIsLoadingMetadata(false);
-
-            setFileUrl(newUrl);
-          } catch (err) {
-            setError("Failed to load PDF. Please check the CID and try again.");
-            setIsLoadingMetadata(false);
-          } finally {
-            setIsLoading(false);
-          }
-        } else {
-          setError("Invalid CID format in URL");
-        }
+      if (fileUrlParam && !autoLoaded) {
+        setAutoLoaded(true);
+        setFileUrl(fileUrlParam);
+        await handleViewPdf(fileUrlParam);
       }
     };
-
     loadFromUrl();
   }, [autoLoaded]);
 
-  const handleCidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.trim();
-    setCid(value);
-    setIsValidCid(validateCid(value));
+
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value.trim();
+    setFileUrl(url);
+    setCid("");
     setError(null);
     setMetadata(null);
   };
 
-  const handleViewPdf = async () => {
-    if (!cid) {
-      setError("Please enter a CID");
+
+  const handleViewPdf = async (overrideUrl?: string) => {
+    const url = String(overrideUrl ?? fileUrl).trim();
+
+    if (!url) {
+      setError("Please enter a valid IPFS gateway URL with filename.");
       return;
     }
-
-    if (!isValidCid) {
-      setError("Invalid CID format");
-      return;
-    }
-
-    setIsLoading(true);
-    setIsLoadingMetadata(true);
-    setError(null);
 
     try {
-      const newUrl = `https://${cid}.ipfs.w3s.link/`;
+      const urlObj = new URL(url);
+      const pathnameParts = urlObj.pathname.split("/").filter(Boolean);
 
-      // Validate if it's a PDF
-      const isPdf = await validatePdfUrl(newUrl);
-      if (!isPdf) {
-        setError("The CID does not point to a PDF file");
-        setIsLoading(false);
-        setIsLoadingMetadata(false);
+      const maybeCid = pathnameParts.includes("ipfs")
+        ? pathnameParts[pathnameParts.indexOf("ipfs") + 1]
+        : pathnameParts[0];
+
+      const maybeFilename = pathnameParts[pathnameParts.length - 1];
+
+      if (!maybeFilename.endsWith(".pdf")) {
+        setError("The URL must end with a valid PDF filename.");
         return;
       }
 
-      // Fetch metadata
-      const docMetadata = await fetchMetadata(cid);
-      setMetadata(docMetadata);
-      setIsLoadingMetadata(false);
+      const isValid = await validatePdfUrl(url);
+      if (!isValid) {
+        setError("The URL does not point to a valid PDF file.");
+        return;
+      }
 
-      setFileUrl(newUrl);
+      setIsLoading(true);
+      setIsLoadingMetadata(true);
+      setError(null);
+      setCid(maybeCid);
+      setFilename(maybeFilename);
+
+      const docMetadata = await fetchMetadata(maybeCid);
+      setMetadata(docMetadata);
     } catch (err) {
-      setError("Failed to load PDF. Please check the CID and try again.");
-      setIsLoadingMetadata(false);
+      setError("Invalid URL or failed to fetch metadata.");
     } finally {
       setIsLoading(false);
+      setIsLoadingMetadata(false);
     }
   };
+
+
 
   // Handle PDF document load
   const handleDocumentLoad = () => {
@@ -145,16 +114,15 @@ export default function PDFViewer({
 
   return (
     <div className="w-full max-w-6xl mx-auto bg-white">
-      <CidInput
-        cid={cid}
-        setCid={setCid}
-        isValidCid={isValidCid}
+      <FileUrlInput
+        fileUrl={fileUrl}
+        setFileUrl={setFileUrl}
         isLoading={isLoading}
         error={error}
-        fileUrl={fileUrl}
         onViewPdf={handleViewPdf}
-        onCidChange={handleCidChange}
+        onFileUrlChange={handleUrlChange}
       />
+
 
       <Metadata
         metadata={metadata}
