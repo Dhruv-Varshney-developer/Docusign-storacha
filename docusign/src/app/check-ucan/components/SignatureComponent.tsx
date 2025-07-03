@@ -62,7 +62,7 @@ export const SignatureBox = ({ documentId, userDid, fileName }: SignatureProps) 
 
     try {
       const hash = await generateHashFromPDFAndSignature(
-        `https://${documentId}.ipfs.w3s.link/${fileName}`,
+        `https://w3s.link/ipfs/${documentId}/${fileName}`,
         signatureDataUrl
       );
 
@@ -107,8 +107,6 @@ export const SignatureBox = ({ documentId, userDid, fileName }: SignatureProps) 
     <div className="p-4 border rounded shadow flex flex-col items-center gap-4">
       <PDFViewer
         fileUrl={`https://w3s.link/ipfs/${documentId}/${fileName}`}
-        signer={true}
-        onLoad={() => setDocVisible(true)}
       />
 
       <h2 className="text-xl font-bold mt-4">Sign this document</h2>

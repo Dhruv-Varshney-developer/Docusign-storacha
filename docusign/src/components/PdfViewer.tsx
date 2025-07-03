@@ -15,8 +15,6 @@ import PdfDisplay from "./PdfDisplay";
 export default function PDFViewer({
   fileUrl: initialFileUrl,
   height = "750px",
-  signer=false,
-  onLoad
 }: PDFViewerProps) {
   const [cid, setCid] = useState("");
   const [fileUrl, setFileUrl] = useState(initialFileUrl || "");
