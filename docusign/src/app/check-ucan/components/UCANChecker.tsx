@@ -4,12 +4,15 @@ import { useState } from "react";
 import { decodeDelegation } from "@/lib/decode";
 import { DecodedDelegation } from "@/types/types";
 import DelegationResult from "./DelegationResult";
+import { SignatureBox } from "./SignatureComponent";
 
 export default function UCANChecker() {
   const [delegation, setDelegation] = useState("");
   const [result, setResult] = useState<DecodedDelegation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [fileCid, setFileCid]=useState<string>("");
+ 
 
   const handleCheck = async () => {
     if (!delegation.trim()) {
@@ -107,7 +110,11 @@ export default function UCANChecker() {
         )}
 
         {/* Results Section */}
-        {result && <DelegationResult result={result} />}
+        {result && <DelegationResult result={result} setFile={setFileCid} />}
+
+        {  
+          result && fileCid!=="" && <SignatureBox documentId={fileCid} userDid={result.audience}/>
+        }
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -14,6 +15,8 @@ import PdfDisplay from "./PdfDisplay";
 export default function PDFViewer({
   fileUrl: initialFileUrl,
   height = "750px",
+  signer=false,
+  onLoad
 }: PDFViewerProps) {
   const [cid, setCid] = useState("");
   const [fileUrl, setFileUrl] = useState(initialFileUrl || "");
@@ -114,6 +117,7 @@ export default function PDFViewer({
 
   return (
     <div className="w-full max-w-6xl mx-auto bg-white">
+
       <FileUrlInput
         fileUrl={fileUrl}
         setFileUrl={setFileUrl}
@@ -129,7 +133,7 @@ export default function PDFViewer({
         isLoading={isLoadingMetadata}
         error={error}
       />
-
+        </>}
       {fileUrl && !error && (
         <PdfDisplay
           fileUrl={fileUrl}
@@ -137,7 +141,8 @@ export default function PDFViewer({
           onDocumentLoad={handleDocumentLoad}
           onDocumentError={handleDocumentError}
         />
-      )}
+      )
+      }
     </div>
   );
 }
