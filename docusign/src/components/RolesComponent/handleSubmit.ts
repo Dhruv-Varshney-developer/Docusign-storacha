@@ -63,6 +63,7 @@ export const handleSubmit = async (
     const saved = data.delegationResult.map((d: any) => ({
       recipientDid: d.receipientDid,
       delegation: d.delegationBase64ToSendToFrontend,
+      fileName:result.filename
     }));
 
     localStorage.setItem(`delegations:${result.cid}`, JSON.stringify(saved));

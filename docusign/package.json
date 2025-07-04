@@ -25,7 +25,10 @@
     "pdfjs-dist": "^3.4.120",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tailwind-merge": "^3.3.0"
+    "react-icons": "^5.5.0",
+    "react-signature-canvas": "^1.1.0-alpha.2",
+    "tailwind-merge": "^3.3.0",
+    "trim-canvas": "^0.1.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

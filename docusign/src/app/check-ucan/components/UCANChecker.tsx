@@ -1,15 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { decodeDelegation } from "@/lib/decode";
 import { DecodedDelegation } from "@/types/types";
 import DelegationResult from "./DelegationResult";
+import { SignatureBox } from "./SignatureComponent";
 
 export default function UCANChecker() {
   const [delegation, setDelegation] = useState("");
   const [result, setResult] = useState<DecodedDelegation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [fileCid, setFileCid]=useState<string>("");
+  const [delegationObject, setDelegationObject]=useState<any>();
+
+useEffect(() => {
+  if (!fileCid || !result?.audience) return;
+
+  const stored = localStorage.getItem(`delegations:${fileCid}`);
+  if (!stored) return;
+
+  try {
+    const delegationArray = JSON.parse(stored);
+
+    if (Array.isArray(delegationArray)) {
+      const matchedDelegation = delegationArray.find(
+        (item) => item.recipientDid === result.audience
+      );
+
+      if (matchedDelegation) {
+        setDelegationObject(matchedDelegation); 
+      }
+    }
+  } catch (e) {
+    console.error("Failed to parse stored delegation:", e);
+  }
+}, [fileCid, result]);
+
 
   const handleCheck = async () => {
     if (!delegation.trim()) {
@@ -107,7 +134,11 @@ export default function UCANChecker() {
         )}
 
         {/* Results Section */}
-        {result && <DelegationResult result={result} />}
+        {result && <DelegationResult result={result} setFile={setFileCid} />}
+
+        {  
+          result && fileCid!=="" && delegationObject !== undefined && <SignatureBox documentId={fileCid} userDid={result.audience} fileName={delegationObject.fileName}/>
+        }
       </div>
     </div>
   );
