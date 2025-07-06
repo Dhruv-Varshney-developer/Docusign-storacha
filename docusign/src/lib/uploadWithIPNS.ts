@@ -24,14 +24,12 @@ export async function uploadWithDelegationAndUpdateIPNS({
   ];
 
   const cid = await client.uploadDirectory(files);
-  console.log("📁 Uploaded new dir:", cid.toString());
 
   if (!savedName) {
     savedName = await ensureIPNSKeyFromScratch();
   }
 
   const ipns = await publishToIPNS(savedName, cid.toString());
-  console.log("Published to IPNS:", ipns);
 
   return { newCid: cid.toString() };
 }

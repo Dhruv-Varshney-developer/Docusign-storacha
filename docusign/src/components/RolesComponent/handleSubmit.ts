@@ -83,14 +83,8 @@ export const handleSubmit = async (
     setDelegated(true);
 
 
-    console.log("result object:", result);
-
     const agreementPdfBlob = await fetch(result.url).then((r) => r.blob());
     const delegationBlob = doc.output("blob");
-
-    console.log("agreement blob size:", agreementPdfBlob.size);
-    console.log("delegation blob size:", delegationBlob.size);
-
 
     const agreementFile = new File([agreementPdfBlob], result.filename, {
       type: result.type,
@@ -109,7 +103,6 @@ export const handleSubmit = async (
 
     const uploadJson = await uploadRes.json();
     if (!uploadJson.success) throw new Error(uploadJson.error);
-    console.log("✅ Updated IPNS and uploaded directory CID:", uploadJson.cid);
 
   } catch (err) {
     console.error("Delegation error:", err);
