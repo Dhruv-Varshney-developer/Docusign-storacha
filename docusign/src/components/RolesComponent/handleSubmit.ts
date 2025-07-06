@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import { Signer } from "@/types/types";
 import { LocalSigner } from "./signerUtils";
+import { uploadWithDelegationAndUpdateIPNS } from "@/lib/uploadWithIPNS";
 
 export const handleSubmit = async (
   e: React.FormEvent,
@@ -63,7 +64,7 @@ export const handleSubmit = async (
     const saved = data.delegationResult.map((d: any) => ({
       recipientDid: d.receipientDid,
       delegation: d.delegationBase64ToSendToFrontend,
-      fileName:result.filename
+      fileName: result.filename
     }));
 
     localStorage.setItem(`delegations:${result.cid}`, JSON.stringify(saved));
@@ -80,6 +81,36 @@ export const handleSubmit = async (
     await fetch("/api/upload", { method: "POST", body: formData });
 
     setDelegated(true);
+
+
+    console.log("result object:", result);
+
+    const agreementPdfBlob = await fetch(result.url).then((r) => r.blob());
+    const delegationBlob = doc.output("blob");
+
+    console.log("agreement blob size:", agreementPdfBlob.size);
+    console.log("delegation blob size:", delegationBlob.size);
+
+
+    const agreementFile = new File([agreementPdfBlob], result.filename, {
+      type: result.type,
+    });
+
+    // Upload both PDFs to a new directory and update IPNS
+    const formDataIPNS = new FormData();
+    formDataIPNS.append("ipnsName", `doc-${result.cid}`);
+    formDataIPNS.append("agreement", agreementFile);
+    formDataIPNS.append("delegation", new File([delegationBlob], "delegations.pdf", { type: "application/pdf" }));
+
+    const uploadRes = await fetch("/api/delegationUpload", {
+      method: "POST",
+      body: formDataIPNS,
+    });
+
+    const uploadJson = await uploadRes.json();
+    if (!uploadJson.success) throw new Error(uploadJson.error);
+    console.log("✅ Updated IPNS and uploaded directory CID:", uploadJson.cid);
+
   } catch (err) {
     console.error("Delegation error:", err);
   }
