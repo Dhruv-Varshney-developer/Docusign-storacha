@@ -5,11 +5,15 @@ import PDFViewer from "@/components/PdfViewer";
 import { useState, useRef } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import jsPDF from "jspdf";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 type SignatureProps = {
   documentId: string;
-  userDid:string;
-  fileName:string;
+  userDid: string;
+  fileName: string;
+  ipnsName: string;
 };
 
 type SignatureData = {
@@ -17,15 +21,18 @@ type SignatureData = {
   signedAt: string;
   documentId: string;
   signatureHash: string;
-  fileName:string;
+  fileName: string;
 };
 
-export const SignatureBox = ({ documentId, userDid, fileName }: SignatureProps) => {
+export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: SignatureProps) => {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [signing, setSigning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [docVisible, setDocVisible] = useState(false);
   const [signatureSaved, setSignatureSaved] = useState(false);
+
+  // delete it later pls
+  // ipnsName = "k51qzi5uqu5dinwo6uxfxse8tj33tm2tj3diefeyms5zo1jn37k055xrj83xxk";
 
   const sigPadRef = useRef<any>(null);
 
@@ -55,45 +62,64 @@ export const SignatureBox = ({ documentId, userDid, fileName }: SignatureProps) 
       setError("Please provide a signature.");
       return;
     }
+
     setSigning(true);
     setError(null);
     setIsAuthorized(true);
-   const signatureDataUrl = sigPadRef.current.getCanvas().toDataURL("image/png");
+
+    const signatureDataUrl = sigPadRef.current.getCanvas().toDataURL("image/png");
 
     try {
+      // generate signature entry
       const hash = await generateHashFromPDFAndSignature(
         `https://w3s.link/ipfs/${documentId}/${fileName}`,
         signatureDataUrl
       );
 
-      const signature: SignatureData = {
+      const newEntry: SignatureData = {
         signer: userDid,
         signedAt: new Date().toISOString(),
         documentId,
-        fileName:fileName,
+        fileName,
         signatureHash: hash,
       };
 
-    const doc = new jsPDF();
-    const jsonText = JSON.stringify(signature, null, 2); 
-    const lines = doc.splitTextToSize(jsonText, 180);
-    doc.text(lines, 10, 20);
+      // Try to fetch old signed.pdf
+      let prevSignatures: SignatureData[] = [];
+      try {
+        const old = await fetch(`https://${ipnsName}.ipns.dweb.link/signed.pdf`);
+        console.log("checking if ipnsName is what is hardcoded hehe", old);
+        if (old.ok) {
+          const buffer = await old.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+          const content = await pdf.getPage(1).then((page) =>
+            page.getTextContent().then((txt) => txt.items.map((i: any) => i.str).join(""))
+          );
+          prevSignatures = JSON.parse(content);
+        }
+      } catch (err) {
+        console.log("No prior signatures found or error decoding:", err);
+      }
 
-    const pdfBlob = doc.output("blob");
-    const file = new File(
-      [pdfBlob],
-      `${userDid}-${documentId}-${fileName}.pdf`,
-      { type: "application/pdf" }
-    );
-    const formData = new FormData();
-    formData.append("file", file);
+      // Add new entry and regenerate PDF
+      const all = [...prevSignatures, newEntry];
+      const doc = new jsPDF();
+      doc.text(doc.splitTextToSize(JSON.stringify(all, null, 2), 180), 10, 10);
+      const blob = doc.output("blob");
 
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-    if (!res.ok) throw new Error("Upload failed");
+      const formData = new FormData();
+      formData.append("ipnsName", ipnsName);
+      formData.append("signed", new File([blob], "signed.pdf", { type: "application/pdf" }));
 
+      const res = await fetch("/api/signDocument", {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+
+      console.log("✅ Signed and reuploaded to:", json.cid);
       setSignatureSaved(true);
     } catch (err) {
       console.error("Signature save error:", err);

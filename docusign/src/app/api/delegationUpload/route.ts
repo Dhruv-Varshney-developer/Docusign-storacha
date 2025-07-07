@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { uploadWithDelegationAndUpdateIPNS } from "@/lib/uploadWithIPNS";
+import { uploadWithDelegation } from "@/lib/uploadWithIPNS";
+import { validateFile } from "@/utils/fileHelpers";
 
 export const runtime = "nodejs";
 
@@ -10,14 +11,29 @@ export async function POST(req: NextRequest) {
         const agreement = form.get("agreement") as File;
         const delegation = form.get("delegation") as File;
 
-        if (!ipnsName || !agreement || !delegation)
-            return NextResponse.json({ success: false, error: "Missing inputs" }, { status: 400 });
+        if (!ipnsName || !agreement || !delegation) {
+            return NextResponse.json(
+                { success: false, error: "Missing inputs" },
+                { status: 400 }
+            );
+        }
 
-        const { newCid } = await uploadWithDelegationAndUpdateIPNS({
-            ipnsName,
+        // file validation
+        for (const f of [agreement, delegation]) {
+            const validation = validateFile(f);
+            if (!validation.isValid) {
+                return NextResponse.json(
+                    { success: false, error: validation.error },
+                    { status: 400 }
+                );
+            }
+        }
+
+        const { newCid } = await uploadWithDelegation({
             agreementPdf: agreement,
             delegationPdf: delegation,
         });
+
 
         return NextResponse.json({ success: true, cid: newCid });
     } catch (err: any) {

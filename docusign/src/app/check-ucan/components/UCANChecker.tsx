@@ -11,31 +11,31 @@ export default function UCANChecker() {
   const [result, setResult] = useState<DecodedDelegation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [fileCid, setFileCid]=useState<string>("");
-  const [delegationObject, setDelegationObject]=useState<any>();
+  const [fileCid, setFileCid] = useState<string>("");
+  const [delegationObject, setDelegationObject] = useState<any>();
 
-useEffect(() => {
-  if (!fileCid || !result?.audience) return;
+  useEffect(() => {
+    if (!fileCid || !result?.audience) return;
 
-  const stored = localStorage.getItem(`delegations:${fileCid}`);
-  if (!stored) return;
+    const stored = localStorage.getItem(`delegations:${fileCid}`);
+    if (!stored) return;
 
-  try {
-    const delegationArray = JSON.parse(stored);
+    try {
+      const delegationArray = JSON.parse(stored);
 
-    if (Array.isArray(delegationArray)) {
-      const matchedDelegation = delegationArray.find(
-        (item) => item.recipientDid === result.audience
-      );
+      if (Array.isArray(delegationArray)) {
+        const matchedDelegation = delegationArray.find(
+          (item) => item.recipientDid === result.audience
+        );
 
-      if (matchedDelegation) {
-        setDelegationObject(matchedDelegation); 
+        if (matchedDelegation) {
+          setDelegationObject(matchedDelegation);
+        }
       }
+    } catch (e) {
+      console.error("Failed to parse stored delegation:", e);
     }
-  } catch (e) {
-    console.error("Failed to parse stored delegation:", e);
-  }
-}, [fileCid, result]);
+  }, [fileCid, result]);
 
 
   const handleCheck = async () => {
@@ -136,9 +136,16 @@ useEffect(() => {
         {/* Results Section */}
         {result && <DelegationResult result={result} setFile={setFileCid} />}
 
-        {  
-          result && fileCid!=="" && delegationObject !== undefined && <SignatureBox documentId={fileCid} userDid={result.audience} fileName={delegationObject.fileName}/>
+        {
+          result && fileCid !== "" && delegationObject !== undefined &&
+          <SignatureBox
+            documentId={fileCid}
+            userDid={result.audience}
+            fileName={delegationObject.fileName}
+            ipnsName={`doc-${fileCid}`}
+          />
         }
+
       </div>
     </div>
   );

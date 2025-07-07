@@ -1,16 +1,13 @@
 import { initStorachaClient } from "./storacha";
-import { ensureIPNSKeyFromScratch, publishToIPNS } from "./ipns";
 
-let savedName: any = null;
-
-export async function uploadWithDelegationAndUpdateIPNS({
-  ipnsName,
+export async function uploadWithDelegation({
   agreementPdf,
   delegationPdf,
+  signedPdf,
 }: {
-  ipnsName: string;
   agreementPdf: File;
   delegationPdf: File;
+  signedPdf?: File;
 }): Promise<{ newCid: string }> {
   const client = await initStorachaClient();
 
@@ -23,13 +20,12 @@ export async function uploadWithDelegationAndUpdateIPNS({
     }),
   ];
 
-  const cid = await client.uploadDirectory(files);
-
-  if (!savedName) {
-    savedName = await ensureIPNSKeyFromScratch();
+  if (signedPdf) {
+    files.push(new File([signedPdf], "signed.pdf", { type: "application/pdf" }));
   }
 
-  const ipns = await publishToIPNS(savedName, cid.toString());
+  const cid = await client.uploadDirectory(files);
+  console.log("📁 Uploaded new dir:", cid.toString());
 
   return { newCid: cid.toString() };
 }

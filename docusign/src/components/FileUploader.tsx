@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload, File, X, Loader2 } from "lucide-react";
+import { extractJsonFromPdf } from "@/lib/read-json";
 
 export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
   const [file, setFile] = useState<File | null>(null);
@@ -99,6 +100,17 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
     }
   }
 
+  const handleReadJSON = async () => {
+    try {
+      extractJsonFromPdf("https://k51qzi5uqu5did4y5p8u7h8c68zewo2o2c0tbkqt26bw3oncc3u4o4k6apo8rg.ipns.dweb.link/delegations.pdf");
+      // console.log("Extracted JSON:", result);
+    } catch (error) {
+      console.error("Error reading JSON:", error);
+      // onUploadError("Failed to read JSON file");
+      
+    }
+  }
+
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="space-y-6">
@@ -132,7 +144,7 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
           />
 
           {!file ? (
-            <div className="space-y-4">
+            <div className="space-yconst result = await-4">
               <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                 <Upload className="w-6 h-6 text-gray-600" />
               </div>
@@ -200,6 +212,8 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
             </>
           )}
         </button>
+
+        <button onClick={handleReadJSON}>read the docs</button>
       </div>
     </div>
   );
