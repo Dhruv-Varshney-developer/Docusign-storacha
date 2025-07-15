@@ -5,14 +5,18 @@ import { decodeDelegation } from "@/lib/decode";
 import { DecodedDelegation } from "@/types/types";
 import DelegationResult from "./DelegationResult";
 import { SignatureBox } from "./SignatureComponent";
+import { getLatestCID } from "@/lib/resolve-ipns";
 
 export default function UCANChecker() {
   const [delegation, setDelegation] = useState("");
   const [result, setResult] = useState<DecodedDelegation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [fileCid, setFileCid]=useState<string>("");
-  const [delegationObject, setDelegationObject]=useState<any>();
+  const [fileCid, setFileCid] = useState<string>("");
+  const [delegationObject, setDelegationObject] = useState<any>();
+  const [ipnsKeyName, setIpnsKeyName] = useState<string | null>(null);
+  const [latestCid, setLatestCid] = useState<string>("");
+  const [isResolvingIPNS, setIsResolvingIPNS] = useState(false);
 
 useEffect(() => {
   if (!fileCid || !result?.audience) return;
@@ -47,11 +51,54 @@ useEffect(() => {
     setIsLoading(true);
     setError(null);
     setResult(null);
+    setFileCid(""); // Reset fileCid
+    setLatestCid(""); // Reset latest CID
+    setIpnsKeyName(null);
 
     try {
       const cleanedDelegation = delegation.trim().replace(/^["']|["']$/g, "");
       const decoded = await decodeDelegation(cleanedDelegation);
       setResult(decoded);
+
+      // Extract and set fileCid properly
+      if (decoded?.nb?.cid) {
+        let extractedCid = decoded.nb.cid;
+        
+        // If the CID is a JSON string, parse it to get the root CID
+        if (typeof extractedCid === 'string' && extractedCid.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(extractedCid);
+            extractedCid = parsed.root?.["/"] || extractedCid;
+          } catch (e) {
+            // If parsing fails, use the original CID
+            console.warn("Failed to parse CID JSON:", e);
+          }
+        }
+        
+        setFileCid(extractedCid);
+      }
+
+      if (decoded?.nb?.ipnsKeyName) {
+        setIpnsKeyName(decoded.nb.ipnsKeyName);
+        console.log("IPNS Key Name:", decoded.nb.ipnsKeyName);
+        
+        // Resolve IPNS to get latest CID
+        setIsResolvingIPNS(true);
+        try {
+          const resolvedCid = await getLatestCID(decoded.nb.ipnsKeyName);
+          setLatestCid(resolvedCid);
+          console.log("✅ Resolved IPNS to CID:", resolvedCid);
+        } catch (ipnsError) {
+          console.warn("⚠️ Failed to resolve IPNS:", ipnsError);
+          // Don't set latestCid to fileCid here, leave it empty to use fileCid as fallback
+        } finally {
+          setIsResolvingIPNS(false);
+        }
+      } else {
+        // If no IPNS name, use the original CID
+        setLatestCid(fileCid);
+      }
+
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to decode UCAN delegation";
@@ -134,11 +181,33 @@ useEffect(() => {
         )}
 
         {/* Results Section */}
-        {result && <DelegationResult result={result} setFile={setFileCid} />}
+        {result && <DelegationResult result={result} />}
 
-        {  
-          result && fileCid!=="" && delegationObject !== undefined && <SignatureBox documentId={fileCid} userDid={result.audience} fileName={delegationObject.fileName}/>
+        {/* IPNS Resolution Status */}
+        {isResolvingIPNS && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+              <p className="text-sm text-blue-700">Resolving IPNS to get latest document version...</p>
+            </div>
+          </div>
+        )}
+
+        {
+          result &&
+          !isResolvingIPNS && // Wait for IPNS resolution to complete
+          (latestCid !== "" || fileCid !== "") &&
+          (
+            <SignatureBox
+              documentId={latestCid || fileCid} // Use latest CID if available, fallback to original
+              userDid={result.audience}
+              fileName={delegationObject?.fileName || result?.nb?.filename || "Unknown Document"}
+              ipnsName={ipnsKeyName}
+            />
+          )
         }
+
+
       </div>
     </div>
   );

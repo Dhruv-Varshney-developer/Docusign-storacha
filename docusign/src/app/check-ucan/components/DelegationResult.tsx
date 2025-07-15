@@ -6,10 +6,9 @@ import { IoMdArrowDropdown } from "react-icons/io";
 
 interface Props {
   result: DecodedDelegation;
-  setFile:(file:string)=>void;
 }
 
-export default function DelegationResult({ result, setFile }: Props) {
+export default function DelegationResult({ result }: Props) {
   const [showDropDown, setShowDropDown] = useState<boolean>(false);
   const formatDate = (date: Date) =>
     new Intl.DateTimeFormat(navigator.language, {
@@ -49,10 +48,16 @@ export default function DelegationResult({ result, setFile }: Props) {
   };
 
 
-  const getContentCID=(fileCid:string)=>{
-    const file=JSON.parse(fileCid).root["/"];
-    setFile(file)
-    return fileCid
+  const getContentCID = (fileCid: string) => {
+    try {
+      const parsed = JSON.parse(fileCid);
+      if (parsed.root && parsed.root["/"]) {
+        return JSON.stringify(parsed, null, 2);
+      }
+    } catch (e) {
+      // If parsing fails, return the original string
+    }
+    return fileCid;
   }
   return (
     <div className="space-y-6">

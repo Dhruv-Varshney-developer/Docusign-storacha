@@ -2,6 +2,9 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload, File, X, Loader2 } from "lucide-react";
+import { extractJsonFromPdf } from "@/lib/read-json";
+import { ensureIPNSKeyFromScratch, exportIPNSKey, importIPNSKeyFromJSON, publishToIPNS } from "@/lib/ipns";
+import { getLatestCID } from "@/lib/resolve-ipns";
 
 export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
   const [file, setFile] = useState<File | null>(null);
@@ -98,6 +101,25 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
       setLoading(false);
     }
   }
+
+
+
+  const handleShowLatestCID = async () => {
+    const ipnsName = "k51qzi5uqu5dis86uiktdnl4brw3hsk8gfrn0oeu9ykh0pe86idvdgxdocz0h8";
+    try {
+      const latestCid = await getLatestCID(ipnsName);
+      const ipfsUrl = `https://w3s.link/ipfs/${latestCid}`;
+      console.log("📦 Latest CID:", latestCid);
+      console.log("🔗 IPFS URL:", ipfsUrl);
+
+      // Show or use it anywhere
+      // Example: Open in new tab
+      // window.open(ipfsUrl, "_blank");
+    } catch (err) {
+      console.error("❌ Failed to get latest CID:", err);
+    }
+  };
+
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -200,6 +222,9 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
             </>
           )}
         </button>
+
+        <button onClick={handleShowLatestCID}>resolve ipns</button>
+
       </div>
     </div>
   );

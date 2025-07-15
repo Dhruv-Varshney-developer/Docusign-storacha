@@ -50,6 +50,8 @@ type DelegationInput = {
   notBefore?: number; // "not valid before" timestamp (seconds)
   baseCapabilities: string[];
   fileCID: string;
+  IPNSKeyName: string,
+  fileName: string
 };
 
 export const createUCANDelegation = async ({
@@ -58,6 +60,8 @@ export const createUCANDelegation = async ({
   notBefore,
   baseCapabilities,
   fileCID,
+  IPNSKeyName,
+  fileName
 }: DelegationInput): Promise<Uint8Array> => {
   try {
     const client = await initStorachaClient();
@@ -65,13 +69,21 @@ export const createUCANDelegation = async ({
     const audience = DID.parse(recipientDID);
     const agent = client.agent;
 
-    const capabilities: Capabilities = baseCapabilities.map((can) => ({
+    const capabilities: Capabilities = baseCapabilities.map((can, i) => ({
       with: `${spaceDID}`,
       can,
       nb: {
         root: Link.parse(fileCID),
-      },
+        cid: fileCID,
+        filename: fileName,
+        ipnsKeyName: IPNSKeyName,
+        meta: {
+          issuedBy: spaceDID.toString(),
+          created: new Date().toISOString(),
+        }
+      }
     })) as Capabilities;
+
 
     const ucan = await Delegation.delegate({
       issuer: agent.issuer,

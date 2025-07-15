@@ -54,10 +54,14 @@ export const handleSubmit = async (
   }));
 
   try {
-    const res = await fetch("/api/Delegate", {
+
+    const ipnsKeyName = `ipns-${result.cid}`;
+    const ipnsNameObject = await ensureIPNSKeyFromScratch(ipnsKeyName);
+    const ipnsNameString = ipnsNameObject.toString();
+    const res = await fetch("/api/delegate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cid: result.cid, numSigners, signers: formatted }),
+      body: JSON.stringify({ cid: result.cid, name: ipnsNameString, fileName: result.filename, numSigners, signers: formatted }),
     });
 
     const { data } = await res.json();
@@ -90,7 +94,21 @@ export const handleSubmit = async (
       type: result.type,
     });
 
-    // Upload both PDFs to a new directory and update IPNS
+    // ✅ Ensure IPNS key and name (persistent)
+    const ipnsNameObj = ipnsNameObject;
+
+    const ipnsName = ipnsNameObj.toString();
+    if (!ipnsNameObj?.key?.bytes) {
+      console.error("❌ key.bytes is undefined in ipnsNameObj");
+      throw new Error("Invalid IPNS key: key.bytes is undefined.");
+    }
+
+    const secretKeyHex = Array.from(ipnsNameObj.key.bytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+
+
     const formDataIPNS = new FormData();
     formDataIPNS.append("ipnsName", `doc-${result.cid}`);
     formDataIPNS.append("agreement", agreementFile);
@@ -104,6 +122,24 @@ export const handleSubmit = async (
     const uploadJson = await uploadRes.json();
     if (!uploadJson.success) throw new Error(uploadJson.error);
 
+
+    await publishToIPNS(ipnsNameObj, uploadJson.cid);
+
+
+    setDelegated(true);
+
+    const storedRaw = JSON.parse(localStorage.getItem(ipnsKeyName) || '{}');
+
+    // ✅ Pass info to frontend UI
+    setFrontendInfo({
+      ipnsName,
+      secretKey: storedRaw,
+      delegations: saved,
+    });
+
+    console.log("✅ Uploaded:", uploadJson.cid);
+    console.log("🧪 IPNS:", ipnsName);
+    console.log("🔐 Secret Key:", secretKeyHex);
   } catch (err) {
     console.error("Delegation error:", err);
   }
