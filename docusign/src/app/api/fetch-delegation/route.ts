@@ -12,7 +12,12 @@ export async function GET(req: NextRequest) {
 
         const parsed = new URL(url);
 
-        const isValidIPNS = parsed.hostname.includes(".ipns.dweb.link") || parsed.pathname.startsWith("/ipns/");
+        const isValidIPNS = (
+            parsed.hostname.includes(".ipns.dweb.link") ||
+            parsed.hostname === "w3s.link" ||
+            
+            parsed.pathname.startsWith("/ipns/")
+        );
         const isValidPDF = parsed.pathname.endsWith(".pdf");
 
         if (!isValidIPNS || !isValidPDF) {

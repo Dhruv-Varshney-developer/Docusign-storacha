@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { cid, signers } = body;
+    const { cid, name, signers, fileName } = body;
 
     const result = await Promise.all(
       signers.map(async (item: Signer) => {
@@ -17,6 +17,8 @@ export async function POST(req: NextRequest) {
           deadline: Number(item.deadline),
           notBefore: item.notBefore ? Number(item.notBefore) : undefined,
           fileCID: cid,
+          IPNSKeyName: name,
+          fileName: fileName
         });
 
         const delegationBase64ToSendToFrontend =
@@ -34,7 +36,7 @@ export async function POST(req: NextRequest) {
         success: true,
         message: "Data received successfully",
         data: {
-          cid,
+          name,
           signers,
           delegationResult: result,
         },

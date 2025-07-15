@@ -3,6 +3,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload, File, X, Loader2 } from "lucide-react";
 import { extractJsonFromPdf } from "@/lib/read-json";
+import { ensureIPNSKeyFromScratch, exportIPNSKey, importIPNSKeyFromJSON, publishToIPNS } from "@/lib/ipns";
+import { getLatestCID } from "@/lib/resolve-ipns";
 
 export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
   const [file, setFile] = useState<File | null>(null);
@@ -102,14 +104,73 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
 
   const handleReadJSON = async () => {
     try {
-      extractJsonFromPdf("https://k51qzi5uqu5did4y5p8u7h8c68zewo2o2c0tbkqt26bw3oncc3u4o4k6apo8rg.ipns.dweb.link/delegations.pdf");
+      // extractJsonFromPdf("https://w3s.link/ipns/k51qzi5uqu5dhxoygw0t46r6ljhj7hnpxwguikdici5zwwur9r2dr2kkq5f8cc/delegations.pdf");
       // console.log("Extracted JSON:", result);
+
+      const sharedExported = {
+        "name": "k51qzi5uqu5dis86uiktdnl4brw3hsk8gfrn0oeu9ykh0pe86idvdgxdocz0h8",
+        "key": [
+          8, 1, 18, 64, 219, 17, 67, 111, 122, 135, 182, 240, 182, 204, 181, 184,
+          201, 218, 84, 219, 114, 27, 193, 35, 139, 74, 169, 135, 187, 64, 46, 191,
+          83, 52, 137, 245, 104, 92, 39, 181, 78, 217, 159, 3, 250, 85, 201, 237,
+          17, 45, 126, 155, 132, 89, 205, 211, 248, 85, 208, 202, 27, 192, 70, 26,
+          100, 57, 233, 44
+        ]
+      }
+
+      const ipnsNameObj = await importIPNSKeyFromJSON(sharedExported);
+
+
+
+      console.log("actual this i need to share", ipnsNameObj);
+
+      const exportData = exportIPNSKey(ipnsNameObj);
+      console.log("📦 Exported IPNS JSON to share:", exportData);
+      const imported = await importIPNSKeyFromJSON(exportData);
+
+      // ✅ Now publish using reconstructed key
+      const publishedName = await publishToIPNS(imported, "bafkreicul7xcq4zbftx46w4brlmqud2a7n3momzqso5jst65hoftni5aki");
+
+      console.log("✅ Published to IPNS:", publishedName);
+
+
+
+      const ipnsName = ipnsNameObj.toString();
+      if (!ipnsNameObj?.key?.bytes) {
+        console.error("❌ key.bytes is undefined in ipnsNameObj");
+        throw new Error("Invalid IPNS key: key.bytes is undefined.");
+      }
+
+      const secretKeyHex = Array.from(ipnsNameObj.key.bytes)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      console.log("🔑 IPNS Name:", ipnsName);
+      console.log("🛡️ Secret Key (Hex):", secretKeyHex);
+
     } catch (error) {
       console.error("Error reading JSON:", error);
       // onUploadError("Failed to read JSON file");
-      
+
     }
   }
+
+  const handleShowLatestCID = async () => {
+    const ipnsName = "k51qzi5uqu5dis86uiktdnl4brw3hsk8gfrn0oeu9ykh0pe86idvdgxdocz0h8";
+    try {
+      const latestCid = await getLatestCID(ipnsName);
+      const ipfsUrl = `https://w3s.link/ipfs/${latestCid}`;
+      console.log("📦 Latest CID:", latestCid);
+      console.log("🔗 IPFS URL:", ipfsUrl);
+
+      // Show or use it anywhere
+      // Example: Open in new tab
+      // window.open(ipfsUrl, "_blank");
+    } catch (err) {
+      console.error("❌ Failed to get latest CID:", err);
+    }
+  };
+
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -213,7 +274,9 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
           )}
         </button>
 
-        <button onClick={handleReadJSON}>read the docs</button>
+        <button onClick={handleReadJSON}>publish (update) new</button>
+        <button onClick={handleShowLatestCID}>resolve ipns</button>
+
       </div>
     </div>
   );

@@ -4,13 +4,13 @@ import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 export async function extractJsonFromPdf(ipnsUrl: string) {
-    const response = await fetch('/api/fetch-delegation');
+    
+    const response = await fetch(`/api/fetch-delegation?url=${encodeURIComponent(ipnsUrl)}`);
     if (!response.ok) throw new Error(`Failed to fetch PDF: ${response.status}`);
 
     const pdfData = await response.arrayBuffer();
     console.log("pdf data", pdfData);
 
-    // ✅ Use correct worker-enabled loading
     const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
 
     const page = await pdf.getPage(1);

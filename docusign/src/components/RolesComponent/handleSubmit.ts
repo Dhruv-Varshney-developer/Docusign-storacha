@@ -58,10 +58,14 @@ export const handleSubmit = async (
   }));
 
   try {
-    const res = await fetch("/api/Delegate", {
+
+    const ipnsKeyName = `ipns-${result.cid}`;
+    const ipnsNameObject = await ensureIPNSKeyFromScratch(ipnsKeyName);
+    const ipnsNameString = ipnsNameObject.toString();
+    const res = await fetch("/api/delegate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cid: result.cid, numSigners, signers: formatted }),
+      body: JSON.stringify({ cid: result.cid, name: ipnsNameString, fileName: result.filename, numSigners, signers: formatted }),
     });
 
     const { data } = await res.json();
@@ -84,7 +88,7 @@ export const handleSubmit = async (
     });
 
     // ✅ Ensure IPNS key and name (persistent)
-    const ipnsNameObj = await ensureIPNSKeyFromScratch();
+    const ipnsNameObj = ipnsNameObject;
 
     const ipnsName = ipnsNameObj.toString();
     if (!ipnsNameObj?.key?.bytes) {
@@ -95,7 +99,6 @@ export const handleSubmit = async (
     const secretKeyHex = Array.from(ipnsNameObj.key.bytes)
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
-
 
 
 
@@ -123,10 +126,12 @@ export const handleSubmit = async (
 
     setDelegated(true);
 
+    const storedRaw = JSON.parse(localStorage.getItem(ipnsKeyName) || '{}');
+
     // ✅ Pass info to frontend UI
     setFrontendInfo({
       ipnsName,
-      secretKey: secretKeyHex,
+      secretKey: storedRaw,
       delegations: saved,
     });
 
