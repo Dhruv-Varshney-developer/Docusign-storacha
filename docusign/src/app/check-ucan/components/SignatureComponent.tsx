@@ -25,6 +25,7 @@ type SignatureData = {
   documentId: string;
   signatureHash: string;
   fileName: string;
+  ipnsName?: string;
 };
 
 export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: SignatureProps) => {

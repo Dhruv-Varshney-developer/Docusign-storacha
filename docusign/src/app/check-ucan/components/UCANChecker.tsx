@@ -18,28 +18,28 @@ export default function UCANChecker() {
   const [latestCid, setLatestCid] = useState<string>("");
   const [isResolvingIPNS, setIsResolvingIPNS] = useState(false);
 
-useEffect(() => {
-  if (!fileCid || !result?.audience) return;
+  useEffect(() => {
+    if (!fileCid || !result?.audience) return;
 
-  const stored = localStorage.getItem(`delegations:${fileCid}`);
-  if (!stored) return;
+    const stored = localStorage.getItem(`delegations:${fileCid}`);
+    if (!stored) return;
 
-  try {
-    const delegationArray = JSON.parse(stored);
+    try {
+      const delegationArray = JSON.parse(stored);
 
-    if (Array.isArray(delegationArray)) {
-      const matchedDelegation = delegationArray.find(
-        (item) => item.recipientDid === result.audience
-      );
+      if (Array.isArray(delegationArray)) {
+        const matchedDelegation = delegationArray.find(
+          (item) => item.recipientDid === result.audience
+        );
 
-      if (matchedDelegation) {
-        setDelegationObject(matchedDelegation); 
+        if (matchedDelegation) {
+          setDelegationObject(matchedDelegation);
+        }
       }
+    } catch (e) {
+      console.error("Failed to parse stored delegation:", e);
     }
-  } catch (e) {
-    console.error("Failed to parse stored delegation:", e);
-  }
-}, [fileCid, result]);
+  }, [fileCid, result]);
 
 
   const handleCheck = async () => {
@@ -202,7 +202,7 @@ useEffect(() => {
               documentId={latestCid || fileCid} // Use latest CID if available, fallback to original
               userDid={result.audience}
               fileName={delegationObject?.fileName || result?.nb?.filename || "Unknown Document"}
-              ipnsName={ipnsKeyName}
+              ipnsName={ipnsKeyName || ""}
             />
           )
         }

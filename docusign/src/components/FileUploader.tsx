@@ -2,6 +2,9 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload, File, X, Loader2 } from "lucide-react";
+import { extractJsonFromPdf } from "@/lib/read-json";
+import { ensureIPNSKeyFromScratch, exportIPNSKey, importIPNSKeyFromJSON, publishToIPNS } from "@/lib/ipns";
+import { getLatestCID } from "@/lib/resolve-ipns";
 
 
 export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
@@ -133,7 +136,7 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
           />
 
           {!file ? (
-            <div className="space-y-4">
+            <div className="space-yconst result = await-4">
               <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                 <Upload className="w-6 h-6 text-gray-600" />
               </div>
@@ -201,7 +204,6 @@ export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
             </>
           )}
         </button>
-
       </div>
     </div>
   );
