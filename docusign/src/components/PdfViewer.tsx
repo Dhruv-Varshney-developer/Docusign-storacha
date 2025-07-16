@@ -86,7 +86,6 @@ export default function PDFViewer({
         setCid(maybeCid);
         setFilename(maybeFilename);
         
-        console.log("📄 Loading PDF directly:", url);
       } catch (err) {
         console.warn("⚠️ URL parsing failed, but continuing:", err);
       }

@@ -39,7 +39,7 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
   const sigPadRef = useRef<any>(null);
 
   if (!ipnsName) {
-    console.log("⏳ Waiting for ipnsName...");
+    console.error("⏳ Waiting for ipnsName...");
     return null;
   }
 
@@ -72,7 +72,6 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
       setError("Please provide a signature.");
       return;
     }
-    console.log("decoded ipns name:", ipnsName);
 
     setSigning(true);
     setError(null);
@@ -87,8 +86,6 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
         signatureDataUrl
       );
 
-      console.log("docuement id in signbox:", documentId);
-
       const newEntry: SignatureData = {
         signer: userDid,
         signedAt: new Date().toISOString(),
@@ -96,20 +93,14 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
         fileName: displayFileName,
         signatureHash: hash,
       };
-      console.log("error here dawg");
-      console.log("decoded ipns name:", ipnsName);
-
       // Try to fetch old signed.pdf
       let prevSignatures: SignatureData[] = [];
 
       try {
         // ✅ Step 1: Get latest CID for the IPNS name
         const latestCID = await getLatestCID(ipnsName);
-        console.log("decoded ipns name:", ipnsName);
-        const ipfsUrl = `https://w3s.link/ipfs/${latestCID}/signed.pdf`;
 
-        console.log("📦 Latest CID:", latestCID);
-        console.log("🔗 Attempting to fetch signed.pdf from:", ipfsUrl);
+        const ipfsUrl = `https://w3s.link/ipfs/${latestCID}/signed.pdf`;
 
         // ✅ Step 2: Fetch the PDF from IPFS (via CID)
         const response = await fetch(ipfsUrl);
@@ -124,7 +115,6 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
 
         // ✅ Step 4: Parse signatures from PDF text
         prevSignatures = JSON.parse(rawText);
-        console.log("✅ Parsed previous signatures:", prevSignatures);
       } catch (err) {
         console.warn("⚠️ No previous signatures found or error during fetch/parse:", err);
       }
@@ -139,12 +129,6 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
       formData.append("ipnsName", ipnsName);
       formData.append("signed", new File([blob], "signed.pdf", { type: "application/pdf" }));
       formData.append("resolvedCid", documentId); // This is the resolved CID from IPNS
-
-      console.log("📤 Sending to API:", {
-        ipnsName,
-        resolvedCid: documentId,
-        signedFileSize: blob.size
-      });
 
       const res = await fetch("/api/signDocument", {
         method: "POST",
@@ -161,7 +145,6 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
         return;
       }
 
-      console.log("✅ Signed and reuploaded to:", json.cid);
       setSignatureSaved(true);
 
       try {
@@ -172,7 +155,7 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
 
         const name = await Name.from(Uint8Array.from(parsed.key));
         const publishedName = await publishToIPNS(name, json.cid);
-        console.log("📡 Republished to IPNS:", publishedName);
+        
       } catch (e) {
         console.error("❌ Failed to republish to IPNS:", e);
         setError("Failed to republish to IPNS. See console.");

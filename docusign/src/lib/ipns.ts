@@ -49,22 +49,19 @@ export async function publishToIPNS(name: Name.WritableName, cid: string) {
   }
 
   await Name.publish(revision, name.key);
-  console.log(`✅ Published to IPNS: ${name.toString()} → ${value}`);
 
 
   if (!name?.key?.sign || typeof name.key.sign !== "function") {
     throw new Error("Signing key is invalid or undefined.");
   }
 
-  // await Name.publish(revision, name.key);
-  // console.log(`✅ Published to IPNS: ${name.toString()}`);
   return name.toString();
 }
 
 export function exportIPNSKey(name: Name.WritableName): { name: string; key: number[] } {
   return {
-    name: name.toString(),           // string (e.g., "k51...")
-    key: Array.from(name.key.bytes) // raw private key bytes
+    name: name.toString(),
+    key: Array.from(name.key.bytes)
   };
 }
 
@@ -89,21 +86,3 @@ export async function importIPNSKeyFromJSON(json: string | { name: string, key: 
 
   return name;
 }
-
-
-
-
-
-
-// export async function loadOrCreateIPNSKey(): Promise<Name.WritableName> {
-//   const stored = localStorage.getItem("ipns-key");
-//   if (stored) {
-//     const bytes = Uint8Array.from(JSON.parse(stored));
-//     return await Name.from(bytes);
-//   }
-
-//   const name = await Name.create();
-//   localStorage.setItem("ipns-key", JSON.stringify(Array.from(name.key.bytes)));
-//   console.log("Created and saved new IPNS key:", name.toString());
-//   return name;
-// }

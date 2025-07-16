@@ -18,9 +18,7 @@ export async function POST(req: NextRequest) {
             // Use resolved CID directly - no IPNS!
             const url = `https://w3s.link/ipfs/${resolvedCid}/${filePath}`;
             const proxyUrl = `${process.env.NEXT_PUBLIC_APP_ORIGIN || "http://localhost:3002"}/api/fetch-delegation?url=${encodeURIComponent(url)}`;
-            
-            console.log(`📁 Fetching ${fileName} from: ${url}`);
-            
+        
             const res = await fetch(proxyUrl);
             if (!res.ok) throw new Error(`Failed to fetch ${filePath} - Status: ${res.status}`);
             const blob = await res.blob();
@@ -33,9 +31,7 @@ export async function POST(req: NextRequest) {
                 fetchFile("agreement.pdf", "agreement.pdf"),
                 fetchFile("delegations.pdf", "delegations.pdf"),
             ]);
-
-            console.log("✅ Successfully fetched both files");
-
+            
             // Step 2: Upload all files including the new signed.pdf
             const { newCid } = await uploadWithDelegation({
                 agreementPdf: agreementFile,

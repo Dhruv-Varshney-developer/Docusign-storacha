@@ -135,9 +135,6 @@ export const handleSubmit = async (
       delegations: saved,
     });
 
-    console.log("✅ Uploaded:", uploadJson.cid);
-    console.log("🧪 IPNS:", ipnsName);
-    console.log("🔐 Secret Key:", secretKeyHex);
   } catch (err) {
     console.error("Delegation error:", err);
     alert("Delegation failed. See console for details.");

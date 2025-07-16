@@ -16,7 +16,6 @@ export const validateCid = (cidString: string): boolean => {
 export const validatePdfUrl = async (url: string): Promise<boolean> => {
   try {
     const response = await fetch(url, { method: "HEAD" });
-    console.log("PDF HEAD", response.status, response.headers.get("content-type"));
     const contentType = response.headers.get("content-type");
     return (
       contentType?.includes("application/pdf") ||

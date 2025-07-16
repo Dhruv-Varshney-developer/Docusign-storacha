@@ -80,14 +80,12 @@ export default function UCANChecker() {
 
       if (decoded?.nb?.ipnsKeyName) {
         setIpnsKeyName(decoded.nb.ipnsKeyName);
-        console.log("IPNS Key Name:", decoded.nb.ipnsKeyName);
         
         // Resolve IPNS to get latest CID
         setIsResolvingIPNS(true);
         try {
           const resolvedCid = await getLatestCID(decoded.nb.ipnsKeyName);
           setLatestCid(resolvedCid);
-          console.log("✅ Resolved IPNS to CID:", resolvedCid);
         } catch (ipnsError) {
           console.warn("⚠️ Failed to resolve IPNS:", ipnsError);
           // Don't set latestCid to fileCid here, leave it empty to use fileCid as fallback

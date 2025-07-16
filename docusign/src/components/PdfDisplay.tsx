@@ -50,7 +50,6 @@ export default function PdfDisplay({
               fullScreenPluginInstance,
             ]}
             onDocumentLoad={(e) => {
-              console.log("✅ PDF loaded successfully");
               // Use setTimeout to prevent setState during render
               setTimeout(() => onDocumentLoad(), 0);
             }}

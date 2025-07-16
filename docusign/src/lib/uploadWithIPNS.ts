@@ -25,7 +25,6 @@ export async function uploadWithDelegation({
   }
 
   const cid = await client.uploadDirectory(files);
-  console.log("📁 Uploaded new dir:", cid.toString());
 
   return { newCid: cid.toString() };
 }
