@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import PDFViewer from "@/components/PdfViewer";
@@ -155,7 +154,7 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
 
         const name = await Name.from(Uint8Array.from(parsed.key));
         const publishedName = await publishToIPNS(name, json.cid);
-        
+
       } catch (e) {
         console.error("❌ Failed to republish to IPNS:", e);
         setError("Failed to republish to IPNS. See console.");

@@ -57,7 +57,7 @@ export default function UCANChecker() {
 
     try {
       const cleanedDelegation = delegation.trim().replace(/^["']|["']$/g, "");
-      const decoded = await decodeDelegation(cleanedDelegation);
+      const decoded: DecodedDelegation = await decodeDelegation(cleanedDelegation);
       setResult(decoded);
 
       // Extract and set fileCid properly
