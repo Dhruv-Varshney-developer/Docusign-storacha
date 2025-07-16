@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import { Signer } from "@/types/types";
 import { LocalSigner } from "./signerUtils";
-import { uploadWithDelegationAndUpdateIPNS } from "@/lib/uploadWithIPNS";
+import { ensureIPNSKeyFromScratch, publishToIPNS } from "@/lib/ipns";
 
 export const handleSubmit = async (
   e: React.FormEvent,

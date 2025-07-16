@@ -16,6 +16,7 @@ type SignatureProps = {
   documentId: string;
   userDid: string;
   fileName: string;
+  ipnsName: string;
 };
 
 type SignatureData = {
@@ -26,7 +27,7 @@ type SignatureData = {
   fileName: string;
 };
 
-export const SignatureBox = ({ documentId, userDid, fileName }: SignatureProps) => {
+export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: SignatureProps) => {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [signing, setSigning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,9 +76,11 @@ export const SignatureBox = ({ documentId, userDid, fileName }: SignatureProps) 
     setSigning(true);
     setError(null);
     setIsAuthorized(true);
+
     const signatureDataUrl = sigPadRef.current.getCanvas().toDataURL("image/png");
 
     try {
+      // generate signature entry
       const hash = await generateHashFromPDFAndSignature(
         `https://w3s.link/ipfs/${documentId}/${displayFileName}`,
         signatureDataUrl
@@ -125,18 +128,16 @@ export const SignatureBox = ({ documentId, userDid, fileName }: SignatureProps) 
         console.warn("⚠️ No previous signatures found or error during fetch/parse:", err);
       }
 
-      const pdfBlob = doc.output("blob");
-      const file = new File(
-        [pdfBlob],
-        `${userDid}-${documentId}-${fileName}.pdf`,
-        { type: "application/pdf" }
-      );
-      
+      // Add new entry and regenerate PDF
+      const all = [...prevSignatures, newEntry];
+      const doc = new jsPDF();
+      doc.text(doc.splitTextToSize(JSON.stringify(all, null, 2), 180), 10, 10);
+      const blob = doc.output("blob");
+
       const formData = new FormData();
       formData.append("ipnsName", ipnsName);
       formData.append("signed", new File([blob], "signed.pdf", { type: "application/pdf" }));
       formData.append("resolvedCid", documentId); // This is the resolved CID from IPNS
-
 
       console.log("📤 Sending to API:", {
         ipnsName,
