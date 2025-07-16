@@ -14,8 +14,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.j
 
 type SignatureProps = {
   documentId: string;
-  userDid:string;
-  fileName:string;
+  userDid: string;
+  fileName: string;
 };
 
 type SignatureData = {
@@ -23,7 +23,7 @@ type SignatureData = {
   signedAt: string;
   documentId: string;
   signatureHash: string;
-  fileName:string;
+  fileName: string;
 };
 
 export const SignatureBox = ({ documentId, userDid, fileName }: SignatureProps) => {
@@ -75,7 +75,7 @@ export const SignatureBox = ({ documentId, userDid, fileName }: SignatureProps) 
     setSigning(true);
     setError(null);
     setIsAuthorized(true);
-   const signatureDataUrl = sigPadRef.current.getCanvas().toDataURL("image/png");
+    const signatureDataUrl = sigPadRef.current.getCanvas().toDataURL("image/png");
 
     try {
       const hash = await generateHashFromPDFAndSignature(
@@ -125,19 +125,18 @@ export const SignatureBox = ({ documentId, userDid, fileName }: SignatureProps) 
         console.warn("⚠️ No previous signatures found or error during fetch/parse:", err);
       }
 
-    const pdfBlob = doc.output("blob");
-    const file = new File(
-      [pdfBlob],
-      `${userDid}-${documentId}-${fileName}.pdf`,
-      { type: "application/pdf" }
-    );
-    const formData = new FormData();
-    formData.append("file", file);
-
+      const pdfBlob = doc.output("blob");
+      const file = new File(
+        [pdfBlob],
+        `${userDid}-${documentId}-${fileName}.pdf`,
+        { type: "application/pdf" }
+      );
+      
       const formData = new FormData();
       formData.append("ipnsName", ipnsName);
       formData.append("signed", new File([blob], "signed.pdf", { type: "application/pdf" }));
       formData.append("resolvedCid", documentId); // This is the resolved CID from IPNS
+
 
       console.log("📤 Sending to API:", {
         ipnsName,
