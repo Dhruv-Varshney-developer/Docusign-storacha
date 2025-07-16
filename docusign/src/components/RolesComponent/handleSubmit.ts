@@ -8,7 +8,12 @@ export const handleSubmit = async (
   signers: LocalSigner[],
   numSigners: number,
   result: any,
-  setDelegated: (v: boolean) => void
+  setDelegated: (v: boolean) => void,
+  setFrontendInfo: (info: {
+    ipnsName: string;
+    secretKey: string;
+    delegations: any[];
+  }) => void
 ) => {
   e.preventDefault();
 
@@ -32,8 +37,7 @@ export const handleSubmit = async (
 
   parsed.sort((a, b) => a.start.getTime() - b.start.getTime());
   for (let i = 0; i < parsed.length - 1; i++) {
-    const cur = parsed[i],
-      next = parsed[i + 1];
+    const cur = parsed[i], next = parsed[i + 1];
     if (next.start.getTime() < cur.end.getTime() + 60000) {
       errors.push(
         `Signer ${cur.index} and ${next.index} have overlapping times.`
@@ -46,7 +50,7 @@ export const handleSubmit = async (
     return;
   }
 
-  const formatted: Signer[] = parsed.map((s) => ({
+  const formatted = parsed.map((s) => ({
     did: s.did,
     capabilities: s.capabilities,
     deadline: Math.floor(s.end.getTime() / 1000).toString(),
@@ -68,28 +72,17 @@ export const handleSubmit = async (
     const saved = data.delegationResult.map((d: any) => ({
       recipientDid: d.receipientDid,
       delegation: d.delegationBase64ToSendToFrontend,
-      fileName: result.filename
+      fileName: result.filename,
     }));
 
+    // ✅ Save to localStorage
     localStorage.setItem(`delegations:${result.cid}`, JSON.stringify(saved));
 
     const doc = new jsPDF();
     doc.text(doc.splitTextToSize(JSON.stringify(saved, null, 2), 180), 10, 10);
-    const blob = doc.output("blob");
-    const file = new File([blob], `delegations-${result.cid}.pdf`, {
-      type: "application/pdf",
-    });
-
-    const formData = new FormData();
-    formData.append("file", file);
-    await fetch("/api/upload", { method: "POST", body: formData });
-
-    setDelegated(true);
-
-
-    const agreementPdfBlob = await fetch(result.url).then((r) => r.blob());
     const delegationBlob = doc.output("blob");
 
+    const agreementPdfBlob = await fetch(result.url).then((r) => r.blob());
     const agreementFile = new File([agreementPdfBlob], result.filename, {
       type: result.type,
     });
@@ -110,9 +103,14 @@ export const handleSubmit = async (
 
 
     const formDataIPNS = new FormData();
-    formDataIPNS.append("ipnsName", `doc-${result.cid}`);
+    formDataIPNS.append("ipnsName", ipnsName);
     formDataIPNS.append("agreement", agreementFile);
-    formDataIPNS.append("delegation", new File([delegationBlob], "delegations.pdf", { type: "application/pdf" }));
+    formDataIPNS.append(
+      "delegation",
+      new File([delegationBlob], "delegations.pdf", {
+        type: "application/pdf",
+      })
+    );
 
     const uploadRes = await fetch("/api/delegationUpload", {
       method: "POST",
@@ -142,5 +140,6 @@ export const handleSubmit = async (
     console.log("🔐 Secret Key:", secretKeyHex);
   } catch (err) {
     console.error("Delegation error:", err);
+    alert("Delegation failed. See console for details.");
   }
 };
