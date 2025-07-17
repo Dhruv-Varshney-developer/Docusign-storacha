@@ -85,6 +85,7 @@ export const createUCANDelegation = async ({
     })) as Capabilities;
 
 
+
     const ucan = await Delegation.delegate({
       issuer: agent.issuer,
       audience,

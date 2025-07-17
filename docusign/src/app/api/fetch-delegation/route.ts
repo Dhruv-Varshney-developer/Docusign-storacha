@@ -1,4 +1,3 @@
-// src/app/api/fetch-ipns-pdf/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
@@ -16,12 +15,12 @@ export async function GET(req: NextRequest) {
             parsed.hostname.includes(".ipns.dweb.link") ||
             parsed.hostname === "w3s.link" ||
             
-            parsed.pathname.startsWith("/ipns/")
+            parsed.pathname.startsWith("/ipfs/")
         );
         const isValidPDF = parsed.pathname.endsWith(".pdf");
 
         if (!isValidIPNS || !isValidPDF) {
-            return NextResponse.json({ error: "Invalid IPNS or file URL" }, { status: 400 });
+            return NextResponse.json({ error: "Invalid IPFS or file URL" }, { status: 400 });
         }
 
         const fetchRes = await fetch(url);

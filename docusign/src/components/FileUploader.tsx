@@ -2,10 +2,6 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload, File, X, Loader2 } from "lucide-react";
-import { extractJsonFromPdf } from "@/lib/read-json";
-import { ensureIPNSKeyFromScratch, exportIPNSKey, importIPNSKeyFromJSON, publishToIPNS } from "@/lib/ipns";
-import { getLatestCID } from "@/lib/resolve-ipns";
-
 
 export default function FileUploader({ onUploadSuccess, onUploadError }: any) {
   const [file, setFile] = useState<File | null>(null);

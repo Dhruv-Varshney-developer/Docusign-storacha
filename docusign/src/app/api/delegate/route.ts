@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
 
     const result = await Promise.all(
       signers.map(async (item: Signer) => {
+
         const delegationResult = await createUCANDelegation({
           recipientDID: item.did,
           baseCapabilities: item.capabilities,
@@ -24,6 +25,8 @@ export async function POST(req: NextRequest) {
         const delegationBase64ToSendToFrontend =
           Buffer.from(delegationResult).toString("base64");
 
+        console.log("capabilities for", item.did, item.capabilities);
+        
         return {
           receipientDid: item.did,
           delegationBase64ToSendToFrontend,
