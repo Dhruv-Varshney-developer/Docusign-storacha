@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import { Worker, Viewer } from "@react-pdf-viewer/core";
 import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
@@ -39,7 +38,7 @@ export default function PdfDisplay({
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-      <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+      <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
         <div style={{ height }} className="w-full">
           <Viewer
             fileUrl={fileUrl}
@@ -49,10 +48,23 @@ export default function PdfDisplay({
               toolbarPluginInstance,
               fullScreenPluginInstance,
             ]}
-            onDocumentLoad={onDocumentLoad}
-            renderError={() => {
-              onDocumentError();
-              return <div>Error loading the document.</div>;
+            onDocumentLoad={(e) => {
+              // Use setTimeout to prevent setState during render
+              setTimeout(() => onDocumentLoad(), 0);
+            }}
+            renderError={(error) => {
+              console.error("❌ PDF render error:", error);
+              // Use setTimeout to prevent setState during render
+              setTimeout(() => onDocumentError(), 0);
+              return (
+                <div className="flex items-center justify-center h-full bg-red-50 text-red-600">
+                  <div className="text-center">
+                    <p className="text-lg font-semibold mb-2">Error loading PDF</p>
+                    <p className="text-sm">The document may be corrupted or not accessible.</p>
+                    <p className="text-xs mt-2 text-gray-500">URL: {fileUrl}</p>
+                  </div>
+                </div>
+              );
             }}
             theme={{
               theme: "light",

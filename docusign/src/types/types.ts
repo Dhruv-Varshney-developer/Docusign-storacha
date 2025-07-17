@@ -27,4 +27,5 @@ export interface DecodedDelegation {
   notBefore?: Date;
   isValid: boolean;
   status: "valid" | "expired" | "not-yet-valid";
+  nb: any;
 }

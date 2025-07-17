@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -26,22 +25,31 @@ export default function PDFViewer({
   const [autoLoaded, setAutoLoaded] = useState(false);
   const [filename, setFilename] = useState("");
 
+  // Auto-load PDF when initialFileUrl is provided
+  useEffect(() => {
+    if (initialFileUrl && !autoLoaded) {
+      setAutoLoaded(true);
+      setFileUrl(initialFileUrl);
+      // Use setTimeout to prevent setState during render
+      setTimeout(() => handleViewPdf(initialFileUrl), 0);
+    }
+  }, [initialFileUrl, autoLoaded]);
+
   // Auto-load PDF from URL parameters
   useEffect(() => {
     const loadFromUrl = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const fileUrlParam = urlParams.get("file");
 
-      if (fileUrlParam && !autoLoaded) {
+      if (fileUrlParam && !autoLoaded && !initialFileUrl) {
         setAutoLoaded(true);
         setFileUrl(fileUrlParam);
-        await handleViewPdf(fileUrlParam);
+        // Use setTimeout to prevent setState during render
+        setTimeout(() => handleViewPdf(fileUrlParam), 0);
       }
     };
     loadFromUrl();
-  }, [autoLoaded]);
-
-
+  }, [autoLoaded, initialFileUrl]);
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value.trim();
@@ -51,7 +59,6 @@ export default function PDFViewer({
     setMetadata(null);
   };
 
-
   const handleViewPdf = async (overrideUrl?: string) => {
     const url = String(overrideUrl ?? fileUrl).trim();
 
@@ -60,6 +67,33 @@ export default function PDFViewer({
       return;
     }
 
+    // For direct PDF URLs (like from SignatureBox), skip validation
+    if (initialFileUrl && url === initialFileUrl) {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const urlObj = new URL(url);
+        const pathnameParts = urlObj.pathname.split("/").filter(Boolean);
+        
+        const maybeCid = pathnameParts.includes("ipfs")
+          ? pathnameParts[pathnameParts.indexOf("ipfs") + 1]
+          : pathnameParts[0];
+        
+        const maybeFilename = pathnameParts[pathnameParts.length - 1];
+        
+        setCid(maybeCid);
+        setFilename(maybeFilename);
+        
+      } catch (err) {
+        console.warn("⚠️ URL parsing failed, but continuing:", err);
+      }
+      
+      setIsLoading(false);
+      return;
+    }
+
+    // Original validation logic for interactive use
     try {
       const urlObj = new URL(url);
       const pathnameParts = urlObj.pathname.split("/").filter(Boolean);
@@ -75,29 +109,37 @@ export default function PDFViewer({
         return;
       }
 
-      const isValid = await validatePdfUrl(url);
-      if (!isValid) {
-        setError("The URL does not point to a valid PDF file.");
-        return;
-      }
-
       setIsLoading(true);
       setIsLoadingMetadata(true);
       setError(null);
       setCid(maybeCid);
       setFilename(maybeFilename);
 
-      const docMetadata = await fetchMetadata(maybeCid);
-      setMetadata(docMetadata);
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      } catch (fetchError) {
+        console.warn("⚠️ PDF validation failed, but continuing anyway:", fetchError);
+      }
+
+      try {
+        const docMetadata = await fetchMetadata(maybeCid);
+        setMetadata(docMetadata);
+      } catch (metadataError) {
+        console.warn("⚠️ Metadata fetch failed:", metadataError);
+        setMetadata(null);
+      }
+
     } catch (err) {
-      setError("Invalid URL or failed to fetch metadata.");
+      console.error("PDF viewer error:", err);
+      setError("Invalid URL format.");
     } finally {
       setIsLoading(false);
       setIsLoadingMetadata(false);
     }
   };
-
-
 
   // Handle PDF document load
   const handleDocumentLoad = () => {
@@ -115,21 +157,25 @@ export default function PDFViewer({
 
   return (
     <div className="w-full max-w-6xl mx-auto bg-white">
-      <FileUrlInput
-        fileUrl={fileUrl}
-        setFileUrl={setFileUrl}
-        isLoading={isLoading}
-        error={error}
-        onViewPdf={handleViewPdf}
-        onFileUrlChange={handleUrlChange}
-      />
+      {/* Only show input controls if no initial URL provided */}
+      {!initialFileUrl && (
+        <FileUrlInput
+          fileUrl={fileUrl}
+          setFileUrl={setFileUrl}
+          isLoading={isLoading}
+          error={error}
+          onViewPdf={handleViewPdf}
+          onFileUrlChange={handleUrlChange}
+        />
+      )}
 
-
-      <Metadata
-        metadata={metadata}
-        isLoading={isLoadingMetadata}
-        error={error}
-      />
+      {!initialFileUrl && (
+        <Metadata
+          metadata={metadata}
+          isLoading={isLoadingMetadata}
+          error={error}
+        />
+      )}
 
       {fileUrl && !error && (
         <PdfDisplay

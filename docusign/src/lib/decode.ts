@@ -1,6 +1,7 @@
 import * as Delegation from "@web3-storage/w3up-client/delegation";
 
 interface DecodedDelegation {
+  nb: any;
   audience: string;
   issuer: string;
   capabilities: any[];
@@ -42,6 +43,8 @@ export async function decodeDelegation(
       isValid = false;
     }
 
+    const nb = capabilities[0]?.nb ?? {};
+
     return {
       audience,
       issuer,
@@ -50,12 +53,12 @@ export async function decodeDelegation(
       notBefore,
       isValid,
       status,
+      nb
     };
   } catch (error) {
     console.error("Error decoding delegation:", error);
     throw new Error(
-      `Failed to decode UCAN delegation: ${
-        error instanceof Error ? error.message : "Unknown error"
+      `Failed to decode UCAN delegation: ${error instanceof Error ? error.message : "Unknown error"
       }`
     );
   }
