@@ -82,7 +82,7 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
       setHasAlreadySigned(userHasSigned);
       
     } catch (err) {
-      console.warn("⚠️ No previous signatures found or error during check:", err);
+      console.warn("No previous signatures found or error during check:", err);
       setHasAlreadySigned(false);
     } finally {
       setCheckingSignature(false);
@@ -146,15 +146,15 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
       let prevSignatures: SignatureData[] = [];
 
       try {
-        // ✅ Step 1: Get latest CID for the IPNS name
+        // Get latest CID for the IPNS name
         const latestCID = await getLatestCID(ipnsName);
         const ipfsUrl = `https://w3s.link/ipfs/${latestCID}/signed.pdf`;
 
-        // ✅ Step 2: Fetch the PDF from IPFS (via CID)
+        // Fetch the PDF from IPFS (via CID)
         const response = await fetch(ipfsUrl);
         if (!response.ok) throw new Error("Could not fetch signed.pdf from IPFS");
 
-        // ✅ Step 3: Extract text content from ALL pages of the PDF
+        // Extract text content from ALL pages of the PDF
         const buffer = await response.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
         
@@ -166,10 +166,10 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
           allText += pageText;
         }
 
-        // ✅ Step 4: Parse signatures from PDF text
+        // Parse signatures from PDF text
         prevSignatures = JSON.parse(allText);
         
-        // ✅ Step 5: Check if user has already signed
+        // Check if user has already signed
         const userHasSigned = prevSignatures.some(sig => sig.signer === userDid);
         if (userHasSigned) {
           setError("You have already signed this document.");
@@ -178,7 +178,7 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
         }
         
       } catch (err) {
-        console.warn("⚠️ No previous signatures found or error during fetch/parse:", err);
+        console.warn("No previous signatures found or error during fetch/parse:", err);
       }
 
       // Add new entry and regenerate PDF
@@ -208,7 +208,7 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
       }
 
       setSignatureSaved(true);
-      setHasAlreadySigned(true); // Mark as signed after successful signing
+      setHasAlreadySigned(true);
 
       try {
         const parsed = JSON.parse(ipnsRawKey);
@@ -220,7 +220,7 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
         const publishedName = await publishToIPNS(name, json.cid);
 
       } catch (e) {
-        console.error("❌ Failed to republish to IPNS:", e);
+        console.error(" Failed to republish to IPNS:", e);
         setError("Failed to republish to IPNS. See console.");
       }
 

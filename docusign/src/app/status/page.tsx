@@ -94,23 +94,18 @@ const IPNSProgressTracker = () => {
         setProgressData(null);
 
         try {
-            console.log("Resolving IPNS name:", ipnsName);
             const latestCid = await getLatestCID(ipnsName);
-            console.log("Latest CID:", latestCid);
 
             // Fetch delegation and signed data
             const delegationsUrl = `https://w3s.link/ipfs/${latestCid}/delegations.pdf`;
             const signedUrl = `https://w3s.link/ipfs/${latestCid}/signed.pdf`;
 
-            console.log("Fetching delegations from:", delegationsUrl);
             const delegationsData = await extractJsonFromPdf(delegationsUrl);
             
-            console.log("Fetching signatures from:", signedUrl);
             const signedData = await extractJsonFromPdf(signedUrl);
 
             // Process the data
             const processedData = processSigningData(delegationsData, signedData, ipnsName);
-            console.log("Processed data:", processedData);
 
             setProgressData(processedData);
         } catch (err) {

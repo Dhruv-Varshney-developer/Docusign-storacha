@@ -63,7 +63,6 @@ export const handleSubmit = async (
     const ipnsKeyName = `ipns-${result.cid}`;
     const ipnsNameObject = await ensureIPNSKeyFromScratch(ipnsKeyName);
     const ipnsNameString = ipnsNameObject.toString();
-    console.log("formatted signers before delegation:", formatted);
 
     const res = await fetch("/api/delegate", {
       method: "POST",

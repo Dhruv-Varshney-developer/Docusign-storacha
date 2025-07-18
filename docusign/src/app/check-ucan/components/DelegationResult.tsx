@@ -22,32 +22,6 @@ export default function DelegationResult({ result }: Props) {
       timeZoneName: "short",
     }).format(date);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "valid":
-        return "text-green-600";
-      case "expired":
-        return "text-red-600";
-      case "not-yet-valid":
-        return "text-orange-600";
-      default:
-        return "text-gray-600";
-    }
-  };
-
-  const getStatusBg = (status: string) => {
-    switch (status) {
-      case "valid":
-        return "bg-green-50 border-green-200";
-      case "expired":
-        return "bg-red-50 border-red-200";
-      case "not-yet-valid":
-        return "bg-orange-50 border-orange-200";
-      default:
-        return "bg-gray-50 border-gray-200";
-    }
-  };
-
   const getContentCID = (fileCid: string) => {
     try {
       const parsed = JSON.parse(fileCid);
@@ -55,7 +29,6 @@ export default function DelegationResult({ result }: Props) {
         return JSON.stringify(parsed, null, 2);
       }
     } catch (e) {
-      // If parsing fails, return the original string
     }
     return fileCid;
   }

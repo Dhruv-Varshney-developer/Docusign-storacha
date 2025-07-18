@@ -18,12 +18,10 @@ export async function extractJsonFromPdf(ipfsUrl: string): Promise<any> {
         fullText += text;
     }
 
-    console.log("🔍 Raw extracted text:", fullText);
 
     try {
         // Try parsing the full string as JSON directly
         const parsed = JSON.parse(fullText);
-        console.log("✅ Parsed JSON:", parsed);
         return parsed;
     } catch (err) {
         console.error("❌ Failed to parse JSON from PDF text. Full text:\n", fullText);
