@@ -78,9 +78,18 @@ export const handleSubmit = async (
       fileName: result.filename,
     }));
 
-    // ✅ Save to localStorage
+    // Save to localStorage
     localStorage.setItem(`delegations:${result.cid}`, JSON.stringify(saved));
 
+    // Data for PDF (excludes delegation)
+    const savedForPdf = data.delegationResult.map((d: any) => ({
+      recipientDid: d.receipientDid,
+      signerName: d.signerName,
+      fileName: result.filename,
+      // Note: delegation is intentionally excluded from PDF for security reasons
+    }));
+
+    // Creating PDF with data excluding delegation
     const doc = new jsPDF();
     const pageHeight = doc.internal.pageSize.getHeight(); // default ≈ 297mm for A4
     const lineHeight = 10;
@@ -88,7 +97,7 @@ export const handleSubmit = async (
     const marginLeft = 10;
     const maxY = pageHeight - marginTop;
 
-    const lines = doc.splitTextToSize(JSON.stringify(saved, null, 2), 180);
+    const lines = doc.splitTextToSize(JSON.stringify(savedForPdf, null, 2), 180);
 
     let currentY = marginTop;
 
