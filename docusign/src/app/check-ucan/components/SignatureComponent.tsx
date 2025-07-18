@@ -1,7 +1,7 @@
 "use client";
 
 import PDFViewer from "@/components/PdfViewer";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import jsPDF from "jspdf";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
@@ -34,6 +34,8 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
   const [docVisible, setDocVisible] = useState(false);
   const [signatureSaved, setSignatureSaved] = useState(false);
   const [ipnsRawKey, setIpnsRawKey] = useState("");
+  const [hasAlreadySigned, setHasAlreadySigned] = useState(false);
+  const [checkingSignature, setCheckingSignature] = useState(true);
 
   const sigPadRef = useRef<any>(null);
 
@@ -44,6 +46,48 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
 
   // Use a default filename if none provided
   const displayFileName = fileName || "document.pdf";
+
+  // Check if user has already signed on component mount
+  useEffect(() => {
+    checkExistingSignature();
+  }, [ipnsName, userDid]);
+
+  const checkExistingSignature = async () => {
+    setCheckingSignature(true);
+    try {
+      const latestCID = await getLatestCID(ipnsName);
+      const ipfsUrl = `https://w3s.link/ipfs/${latestCID}/signed.pdf`;
+      
+      const response = await fetch(ipfsUrl);
+      if (!response.ok) {
+        // No signed.pdf exists yet, user hasn't signed
+        setHasAlreadySigned(false);
+        return;
+      }
+
+      const buffer = await response.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+      
+      // Extract text from all pages
+      let allText = "";
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((i: any) => i.str).join("");
+        allText += pageText;
+      }
+
+      const existingSignatures: SignatureData[] = JSON.parse(allText);
+      const userHasSigned = existingSignatures.some(sig => sig.signer === userDid);
+      setHasAlreadySigned(userHasSigned);
+      
+    } catch (err) {
+      console.warn("⚠️ No previous signatures found or error during check:", err);
+      setHasAlreadySigned(false);
+    } finally {
+      setCheckingSignature(false);
+    }
+  };
 
   async function generateHashFromPDFAndSignature(
     pdfUrl: string,
@@ -67,6 +111,11 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
   }
 
   const handleSign = async () => {
+    if (hasAlreadySigned) {
+      setError("You have already signed this document.");
+      return;
+    }
+
     if (sigPadRef.current.isEmpty()) {
       setError("Please provide a signature.");
       return;
@@ -92,28 +141,42 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
         fileName: displayFileName,
         signatureHash: hash,
       };
+      
       // Try to fetch old signed.pdf
       let prevSignatures: SignatureData[] = [];
 
       try {
         // ✅ Step 1: Get latest CID for the IPNS name
         const latestCID = await getLatestCID(ipnsName);
-
         const ipfsUrl = `https://w3s.link/ipfs/${latestCID}/signed.pdf`;
 
         // ✅ Step 2: Fetch the PDF from IPFS (via CID)
         const response = await fetch(ipfsUrl);
         if (!response.ok) throw new Error("Could not fetch signed.pdf from IPFS");
 
-        // ✅ Step 3: Extract text content from the PDF
+        // ✅ Step 3: Extract text content from ALL pages of the PDF
         const buffer = await response.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-        const firstPage = await pdf.getPage(1);
-        const textContent = await firstPage.getTextContent();
-        const rawText = textContent.items.map((i: any) => i.str).join("");
+        
+        let allText = "";
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map((i: any) => i.str).join("");
+          allText += pageText;
+        }
 
         // ✅ Step 4: Parse signatures from PDF text
-        prevSignatures = JSON.parse(rawText);
+        prevSignatures = JSON.parse(allText);
+        
+        // ✅ Step 5: Check if user has already signed
+        const userHasSigned = prevSignatures.some(sig => sig.signer === userDid);
+        if (userHasSigned) {
+          setError("You have already signed this document.");
+          setHasAlreadySigned(true);
+          return;
+        }
+        
       } catch (err) {
         console.warn("⚠️ No previous signatures found or error during fetch/parse:", err);
       }
@@ -145,6 +208,7 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
       }
 
       setSignatureSaved(true);
+      setHasAlreadySigned(true); // Mark as signed after successful signing
 
       try {
         const parsed = JSON.parse(ipnsRawKey);
@@ -168,6 +232,18 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
     setSigning(false);
   };
 
+  // Show loading state while checking existing signature
+  if (checkingSignature) {
+    return (
+      <div className="p-4 border rounded shadow flex flex-col items-center gap-4">
+        <div className="flex items-center gap-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+          <p>Checking signature status...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 border rounded shadow flex flex-col items-center gap-4">
       <PDFViewer
@@ -176,18 +252,27 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
 
       <h2 className="text-xl font-bold mt-4">Sign this document</h2>
 
+      {hasAlreadySigned && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 w-full">
+          <p className="text-yellow-800 text-center font-medium">
+            ✓ You have already signed this document
+          </p>
+        </div>
+      )}
+
       <SignatureCanvas
         ref={sigPadRef}
         penColor="black"
         canvasProps={{
           width: 400,
           height: 150,
-          className: "border-2 border-gray-400 rounded-md",
+          className: `border-2 border-gray-400 rounded-md ${hasAlreadySigned ? 'opacity-50' : ''}`,
         }}
       />
       <button
         onClick={() => sigPadRef.current.clear()}
         className="text-sm text-blue-600 underline cursor-pointer"
+        disabled={hasAlreadySigned}
       >
         Clear Signature
       </button>
@@ -203,19 +288,21 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
         <textarea
           value={ipnsRawKey}
           onChange={(e) => setIpnsRawKey(e.target.value)}
-          className="w-full p-2 border text-sm rounded bg-white font-mono"
+          className={`w-full p-2 border text-sm rounded bg-white font-mono ${hasAlreadySigned ? 'opacity-50' : ''}`}
           rows={6}
           placeholder='{"name": "...", "key": [8, 1, 18, 64, ...]}'
+          disabled={hasAlreadySigned}
         />
       </div>
 
-
       <button
         onClick={handleSign}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-[40%] mt-2 cursor-pointer"
-        disabled={signing}
+        className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-[40%] mt-2 cursor-pointer ${
+          hasAlreadySigned ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+        disabled={signing || hasAlreadySigned}
       >
-        {signing ? "Signing..." : "Sign Document"}
+        {signing ? "Signing..." : hasAlreadySigned ? "Already Signed" : "Sign Document"}
       </button>
     </div>
   );

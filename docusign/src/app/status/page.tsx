@@ -63,11 +63,16 @@ export function processSigningData(
         };
     });
 
+    // Calculate actual signatures that match delegations (prevent overflow)
+    const validSignatures = signatures.filter(sig => 
+        delegations.some(del => del.recipientDid === sig.signer)
+    );
+
     return {
         ipnsName,
         signers: processedSigners,
         totalSigners: delegations.length,
-        currentSignatures: signatures.length,
+        currentSignatures: validSignatures.length,
         fileName: delegations[0]?.fileName || 'Unknown'
     };
 }
@@ -114,8 +119,10 @@ const IPNSProgressTracker = () => {
     };
 
     const getProgressPercentage = () => {
-        if (!progressData) return 0;
-        return (progressData.currentSignatures / progressData.totalSigners) * 100;
+        if (!progressData || progressData.totalSigners === 0) return 0;
+        // Ensure percentage never exceeds 100%
+        const percentage = (progressData.currentSignatures / progressData.totalSigners) * 100;
+        return Math.min(percentage, 100);
     };
 
     const getStatusIcon = (status) => {
