@@ -3,6 +3,7 @@
 import { DecodedDelegation } from "@/types/types";
 import { useState } from "react";
 import { IoMdArrowDropdown } from "react-icons/io";
+import { User } from "lucide-react";
 
 interface Props {
   result: DecodedDelegation;
@@ -47,7 +48,6 @@ export default function DelegationResult({ result }: Props) {
     }
   };
 
-
   const getContentCID = (fileCid: string) => {
     try {
       const parsed = JSON.parse(fileCid);
@@ -59,8 +59,23 @@ export default function DelegationResult({ result }: Props) {
     }
     return fileCid;
   }
+
   return (
     <div className="space-y-6">
+      {/* Signer Information Section */}
+      {result.signerName && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <User className="w-5 h-5 text-blue-600 mr-2" />
+            <div>
+              <h3 className="text-lg font-medium text-blue-900">Signer Information</h3>
+              <p className="text-blue-700">
+                <span className="font-medium">Name:</span> {result.signerName}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delegation Details */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -105,6 +120,18 @@ export default function DelegationResult({ result }: Props) {
                 </p>
               </div>
             </div>
+
+            {/* Add Signer Name in the detailed view as well */}
+            {result.signerName && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Authorized Signer
+                </label>
+                <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                  {result.signerName}
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {result.notBefore && (

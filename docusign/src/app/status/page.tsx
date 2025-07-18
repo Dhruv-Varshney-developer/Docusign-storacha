@@ -9,6 +9,7 @@ import { processSigningData } from '@/lib/process-signing-data';
 
 interface DelegationData {
     recipientDid: string;
+    signerName: string; // Add signer name
     delegation: string;
     fileName: string;
 }
@@ -24,6 +25,7 @@ interface SignedData {
 interface ProcessedSigner {
     id: number;
     did: string;
+    signerName: string; // Add signer name
     fileName: string;
     status: 'signed' | 'pending';
     timestamp: string | null;
@@ -56,6 +58,7 @@ export function processSigningData(
         return {
             id: index + 1,
             did: delegation.recipientDid,
+            signerName: delegation.signerName || `Signer ${index + 1}`, // Use signer name from delegation
             fileName: delegation.fileName,
             status: signedData ? 'signed' : 'pending',
             timestamp: signedData ? signedData.signedAt : null,
@@ -265,7 +268,7 @@ const IPNSProgressTracker = () => {
 
                                                 {/* Node Info */}
                                                 <div className="mt-3 text-center">
-                                                    <div className="text-sm font-medium text-gray-900">Signer {signer.id}</div>
+                                                    <div className="text-sm font-medium text-gray-900">{signer.signerName}</div>
                                                     <div className="text-xs text-gray-500 font-mono">{formatDid(signer.did)}</div>
                                                     {signer.timestamp && (
                                                         <div className="text-xs text-gray-400 mt-1">
@@ -290,7 +293,7 @@ const IPNSProgressTracker = () => {
                                         <div className="flex items-center space-x-3">
                                             {getStatusIcon(signer.status)}
                                             <div>
-                                                <div className="font-medium text-gray-900">Signer {signer.id}</div>
+                                                <div className="font-medium text-gray-900">{signer.signerName}</div>
                                                 <div className="text-sm text-gray-500 flex items-center">
                                                     <span className="font-mono">{formatDid(signer.did)}</span>
                                                     <button

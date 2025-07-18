@@ -52,6 +52,7 @@ export const handleSubmit = async (
 
   const formatted = parsed.map((s) => ({
     did: s.did,
+    name: s.name, // Add name field
     capabilities: s.capabilities,
     deadline: Math.floor(s.end.getTime() / 1000).toString(),
     notBefore: Math.floor(s.start.getTime() / 1000).toString(),
@@ -73,6 +74,7 @@ export const handleSubmit = async (
     const { data } = await res.json();
     const saved = data.delegationResult.map((d: any) => ({
       recipientDid: d.receipientDid,
+      signerName: d.signerName, // Add signer name to saved data
       delegation: d.delegationBase64ToSendToFrontend,
       fileName: result.filename,
     }));

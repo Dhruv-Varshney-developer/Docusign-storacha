@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
 
         const delegationResult = await createUCANDelegation({
           recipientDID: item.did,
+          signerName: item.name, // Pass signer name
           baseCapabilities: item.capabilities,
           deadline: Number(item.deadline),
           notBefore: item.notBefore ? Number(item.notBefore) : undefined,
@@ -29,6 +30,7 @@ export async function POST(req: NextRequest) {
         
         return {
           receipientDid: item.did,
+          signerName: item.name, // Include signer name in response
           delegationBase64ToSendToFrontend,
         };
       })

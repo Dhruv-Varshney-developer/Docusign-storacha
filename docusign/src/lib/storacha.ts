@@ -56,6 +56,7 @@ type DelegationInput = {
 
 export const createUCANDelegation = async ({
   recipientDID,
+  signerName, // Add signer name parameter
   deadline,
   notBefore,
   baseCapabilities,
@@ -79,12 +80,11 @@ export const createUCANDelegation = async ({
         ipnsKeyName: IPNSKeyName,
         meta: {
           issuedBy: spaceDID.toString(),
+          signerName: signerName,
           created: new Date().toISOString(),
         }
       }
     })) as Capabilities;
-
-
 
     const ucan = await Delegation.delegate({
       issuer: agent.issuer,

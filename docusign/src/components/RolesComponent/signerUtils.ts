@@ -1,8 +1,9 @@
 export type LocalSigner = {
   did: string;
+  name: string;
   capabilities: string[];
+  startTime: string;
   deadline: string;
-  startTime?: string;
 };
 
 const pad = (n: number) => n.toString().padStart(2, "0");

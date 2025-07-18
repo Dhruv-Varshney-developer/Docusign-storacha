@@ -20,6 +20,20 @@ export const SignerForm = ({ index, signer, signers, setSigners }: Props) => (
     </h3>
 
     <div>
+      <label className="block mb-1 text-sm">Signer Name</label>
+      <input
+        type="text"
+        value={signer.name || ''}
+        onChange={(e) =>
+          updateSignerField(index, "name", e.target.value, signers, setSigners)
+        }
+        className="w-full px-4 py-2 border rounded"
+        placeholder="Enter signer's name"
+        required
+      />
+    </div>
+
+    <div>
       <label className="block mb-1 text-sm">Signer DID</label>
       <input
         type="text"
