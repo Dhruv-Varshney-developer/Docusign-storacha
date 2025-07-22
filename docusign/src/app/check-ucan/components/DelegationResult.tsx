@@ -3,6 +3,7 @@
 import { DecodedDelegation } from "@/types/types";
 import { useState } from "react";
 import { IoMdArrowDropdown } from "react-icons/io";
+import { User } from "lucide-react";
 
 interface Props {
   result: DecodedDelegation;
@@ -21,33 +22,6 @@ export default function DelegationResult({ result }: Props) {
       timeZoneName: "short",
     }).format(date);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "valid":
-        return "text-green-600";
-      case "expired":
-        return "text-red-600";
-      case "not-yet-valid":
-        return "text-orange-600";
-      default:
-        return "text-gray-600";
-    }
-  };
-
-  const getStatusBg = (status: string) => {
-    switch (status) {
-      case "valid":
-        return "bg-green-50 border-green-200";
-      case "expired":
-        return "bg-red-50 border-red-200";
-      case "not-yet-valid":
-        return "bg-orange-50 border-orange-200";
-      default:
-        return "bg-gray-50 border-gray-200";
-    }
-  };
-
-
   const getContentCID = (fileCid: string) => {
     try {
       const parsed = JSON.parse(fileCid);
@@ -55,81 +29,26 @@ export default function DelegationResult({ result }: Props) {
         return JSON.stringify(parsed, null, 2);
       }
     } catch (e) {
-      // If parsing fails, return the original string
     }
     return fileCid;
   }
+
   return (
     <div className="space-y-6">
-      {/* Status Card */}
-      <div className={`rounded-lg border-2 p-6 ${getStatusBg(result.status)}`}>
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            {result.status === "valid" ? (
-              <svg
-                className="h-6 w-6 text-green-600"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            ) : result.status === "expired" ? (
-              <svg
-                className="h-6 w-6 text-red-600"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            ) : (
-              <svg
-                className="h-6 w-6 text-orange-600"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5C3.462 16.333 4.46 18 6 18z"
-                />
-              </svg>
-            )}
-          </div>
-          <div className="ml-3">
-            <h3
-              className={`text-lg font-semibold ${getStatusColor(
-                result.status
-              )}`}
-            >
-              {result.status === "valid" && "Valid Delegation"}
-              {result.status === "expired" && "Expired Delegation"}
-              {result.status === "not-yet-valid" && "Not Yet Valid"}
-            </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              {result.status === "valid" &&
-                "This delegation is currently valid and can be used."}
-              {result.status === "expired" &&
-                "This delegation has expired and cannot be used."}
-              {result.status === "not-yet-valid" &&
-                "This delegation is not yet valid."}
-            </p>
+      {/* Signer Information Section */}
+      {result.signerName && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <User className="w-5 h-5 text-blue-600 mr-2" />
+            <div>
+              <h3 className="text-lg font-medium text-blue-900">Signer Information</h3>
+              <p className="text-blue-700">
+                <span className="font-medium">Name:</span> {result.signerName}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Delegation Details */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -174,6 +93,18 @@ export default function DelegationResult({ result }: Props) {
                 </p>
               </div>
             </div>
+
+            {/* Add Signer Name in the detailed view as well */}
+            {result.signerName && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Authorized Signer
+                </label>
+                <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                  {result.signerName}
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {result.notBefore && (

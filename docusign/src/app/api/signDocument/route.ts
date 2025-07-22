@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
         }
 
         const fetchFile = async (filePath: string, fileName: string) => {
-            // Use resolved CID directly - no IPNS!
+            // using resolved IPFS link
             const url = `https://w3s.link/ipfs/${resolvedCid}/${filePath}`;
             const proxyUrl = `${process.env.NEXT_PUBLIC_APP_ORIGIN || "http://localhost:3002"}/api/fetch-delegation?url=${encodeURIComponent(url)}`;
         
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: true, cid: newCid });
 
         } catch (fetchError) {
-            console.error("❌ Failed to fetch existing files:", fetchError);
+            console.error("Failed to fetch existing files:", fetchError);
             
             // Step 3: If files don't exist, this means it's a new setup
             // Return error to handle this case in the frontend

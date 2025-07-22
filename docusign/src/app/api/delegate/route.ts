@@ -11,8 +11,10 @@ export async function POST(req: NextRequest) {
 
     const result = await Promise.all(
       signers.map(async (item: Signer) => {
+
         const delegationResult = await createUCANDelegation({
           recipientDID: item.did,
+          signerName: item.name,
           baseCapabilities: item.capabilities,
           deadline: Number(item.deadline),
           notBefore: item.notBefore ? Number(item.notBefore) : undefined,
@@ -26,6 +28,7 @@ export async function POST(req: NextRequest) {
 
         return {
           receipientDid: item.did,
+          signerName: item.name,
           delegationBase64ToSendToFrontend,
         };
       })

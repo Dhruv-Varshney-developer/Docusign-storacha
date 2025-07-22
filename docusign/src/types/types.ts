@@ -13,10 +13,11 @@ export interface PDFViewerProps {
 }
 
 export interface Signer {
-  notBefore: any;
   did: string;
+  name: string; // Add this field
   capabilities: string[];
   deadline: string;
+  notBefore?: string;
 }
 
 export interface DecodedDelegation {

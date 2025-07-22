@@ -52,6 +52,7 @@ export const handleSubmit = async (
 
   const formatted = parsed.map((s) => ({
     did: s.did,
+    name: s.name, // Add name field
     capabilities: s.capabilities,
     deadline: Math.floor(s.end.getTime() / 1000).toString(),
     notBefore: Math.floor(s.start.getTime() / 1000).toString(),
@@ -62,6 +63,7 @@ export const handleSubmit = async (
     const ipnsKeyName = `ipns-${result.cid}`;
     const ipnsNameObject = await ensureIPNSKeyFromScratch(ipnsKeyName);
     const ipnsNameString = ipnsNameObject.toString();
+
     const res = await fetch("/api/delegate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -71,16 +73,45 @@ export const handleSubmit = async (
     const { data } = await res.json();
     const saved = data.delegationResult.map((d: any) => ({
       recipientDid: d.receipientDid,
+      signerName: d.signerName, // Add signer name to saved data
       delegation: d.delegationBase64ToSendToFrontend,
       fileName: result.filename,
     }));
 
-    // ✅ Save to localStorage
+    // Save to localStorage
     localStorage.setItem(`delegations:${result.cid}`, JSON.stringify(saved));
 
+    // Data for PDF (excludes delegation)
+    const savedForPdf = data.delegationResult.map((d: any) => ({
+      recipientDid: d.receipientDid,
+      signerName: d.signerName,
+      fileName: result.filename,
+      // Note: delegation is intentionally excluded from PDF for security reasons
+    }));
+
+    // Creating PDF with data excluding delegation
     const doc = new jsPDF();
-    doc.text(doc.splitTextToSize(JSON.stringify(saved, null, 2), 180), 10, 10);
+    const pageHeight = doc.internal.pageSize.getHeight(); // default ≈ 297mm for A4
+    const lineHeight = 10;
+    const marginTop = 10;
+    const marginLeft = 10;
+    const maxY = pageHeight - marginTop;
+
+    const lines = doc.splitTextToSize(JSON.stringify(savedForPdf, null, 2), 180);
+
+    let currentY = marginTop;
+
+    for (let i = 0; i < lines.length; i++) {
+      if (currentY + lineHeight > maxY) {
+        doc.addPage();
+        currentY = marginTop;
+      }
+      doc.text(lines[i], marginLeft, currentY);
+      currentY += lineHeight;
+    }
+
     const delegationBlob = doc.output("blob");
+
 
     const agreementPdfBlob = await fetch(result.url).then((r) => r.blob());
     const agreementFile = new File([agreementPdfBlob], result.filename, {
@@ -95,12 +126,6 @@ export const handleSubmit = async (
       console.error("❌ key.bytes is undefined in ipnsNameObj");
       throw new Error("Invalid IPNS key: key.bytes is undefined.");
     }
-
-    const secretKeyHex = Array.from(ipnsNameObj.key.bytes)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-
-
 
     const formDataIPNS = new FormData();
     formDataIPNS.append("ipnsName", ipnsName);

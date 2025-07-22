@@ -9,6 +9,7 @@ interface DecodedDelegation {
   notBefore?: Date;
   isValid: boolean;
   status: "valid" | "expired" | "not-yet-valid";
+  signerName?: string; // Add signer name field
 }
 
 export async function decodeDelegation(
@@ -44,6 +45,9 @@ export async function decodeDelegation(
     }
 
     const nb = capabilities[0]?.nb ?? {};
+    
+    // Extract signer name from meta
+    const signerName = capabilities[0]?.nb?.meta?.signerName || undefined;
 
     return {
       audience,
@@ -53,7 +57,8 @@ export async function decodeDelegation(
       notBefore,
       isValid,
       status,
-      nb
+      nb,
+      signerName // Include signer name in return object
     };
   } catch (error) {
     console.error("Error decoding delegation:", error);
