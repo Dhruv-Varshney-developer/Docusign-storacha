@@ -46,6 +46,7 @@ export async function uploadFileToStoracha(client: Client.Client, file: File) {
 
 type DelegationInput = {
   recipientDID: string;
+  signerName: string;
   deadline: number; // expiration timestamp (seconds)
   notBefore?: number; // "not valid before" timestamp (seconds)
   baseCapabilities: string[];

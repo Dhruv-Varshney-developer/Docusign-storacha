@@ -22,6 +22,7 @@ export interface Signer {
 
 export interface DecodedDelegation {
   audience: string;
+  signerName?: string;
   issuer: string;
   capabilities: any[];
   expiration: Date;

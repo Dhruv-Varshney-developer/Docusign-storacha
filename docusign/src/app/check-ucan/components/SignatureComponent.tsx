@@ -1,7 +1,7 @@
 "use client";
 
 import PDFViewer from "@/components/PdfViewer";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import jsPDF from "jspdf";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
@@ -39,36 +39,29 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
 
   const sigPadRef = useRef<any>(null);
 
-  if (!ipnsName) {
-    console.error("⏳ Waiting for ipnsName...");
-    return null;
-  }
+
+
+
 
   // Use a default filename if none provided
   const displayFileName = fileName || "document.pdf";
 
-  // Check if user has already signed on component mount
-  useEffect(() => {
-    checkExistingSignature();
-  }, [ipnsName, userDid]);
-
-  const checkExistingSignature = async () => {
+  // Define first, and fix the dependency array
+  const checkExistingSignature = useCallback(async () => {
     setCheckingSignature(true);
     try {
       const latestCID = await getLatestCID(ipnsName);
       const ipfsUrl = `https://w3s.link/ipfs/${latestCID}/signed.pdf`;
-      
+
       const response = await fetch(ipfsUrl);
       if (!response.ok) {
-        // No signed.pdf exists yet, user hasn't signed
         setHasAlreadySigned(false);
         return;
       }
 
       const buffer = await response.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-      
-      // Extract text from all pages
+
       let allText = "";
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
         const page = await pdf.getPage(pageNum);
@@ -80,14 +73,24 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
       const existingSignatures: SignatureData[] = JSON.parse(allText);
       const userHasSigned = existingSignatures.some(sig => sig.signer === userDid);
       setHasAlreadySigned(userHasSigned);
-      
+
     } catch (err) {
       console.warn("No previous signatures found or error during check:", err);
       setHasAlreadySigned(false);
     } finally {
       setCheckingSignature(false);
     }
-  };
+  }, [ipnsName, userDid]);
+
+  useEffect(() => {
+    checkExistingSignature();
+  }, [checkExistingSignature]);
+
+
+  if (!ipnsName) {
+    console.error("⏳ Waiting for ipnsName...");
+    return null;
+  }
 
   async function generateHashFromPDFAndSignature(
     pdfUrl: string,
@@ -141,7 +144,7 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
         fileName: displayFileName,
         signatureHash: hash,
       };
-      
+
       // Try to fetch old signed.pdf
       let prevSignatures: SignatureData[] = [];
 
@@ -157,7 +160,7 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
         // Extract text content from ALL pages of the PDF
         const buffer = await response.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-        
+
         let allText = "";
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
@@ -168,7 +171,7 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
 
         // Parse signatures from PDF text
         prevSignatures = JSON.parse(allText);
-        
+
         // Check if user has already signed
         const userHasSigned = prevSignatures.some(sig => sig.signer === userDid);
         if (userHasSigned) {
@@ -176,7 +179,7 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
           setHasAlreadySigned(true);
           return;
         }
-        
+
       } catch (err) {
         console.warn("No previous signatures found or error during fetch/parse:", err);
       }
@@ -297,9 +300,8 @@ export const SignatureBox = ({ documentId, userDid, fileName, ipnsName }: Signat
 
       <button
         onClick={handleSign}
-        className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-[40%] mt-2 cursor-pointer ${
-          hasAlreadySigned ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
+        className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-[40%] mt-2 cursor-pointer ${hasAlreadySigned ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         disabled={signing || hasAlreadySigned}
       >
         {signing ? "Signing..." : hasAlreadySigned ? "Already Signed" : "Sign Document"}
