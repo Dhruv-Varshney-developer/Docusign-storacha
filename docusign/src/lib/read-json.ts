@@ -24,7 +24,7 @@ export async function extractJsonFromPdf(ipfsUrl: string): Promise<any> {
         const parsed = JSON.parse(fullText);
         return parsed;
     } catch (err) {
-        console.error("❌ Failed to parse JSON from PDF text. Full text:\n", fullText);
+        console.error("Failed to parse JSON from PDF text. Full text:\n", fullText);
         throw new Error("Failed to parse JSON from PDF text");
     }
 }

@@ -2,11 +2,9 @@ import * as Name from 'w3name';
 
 export async function ensureIPNSKeyFromScratch(storageKey: string): Promise<Name.WritableName> {
   try {
-
     if (!storageKey) {
-      throw new Error("❌ IPNS storageKey is required!");
+      throw new Error("IPNS storageKey is required!");
     }
-
 
     const raw = localStorage.getItem(storageKey);
 
@@ -18,14 +16,13 @@ export async function ensureIPNSKeyFromScratch(storageKey: string): Promise<Name
         const name = await Name.from(keyBytes);
         return name;
       }
-
       console.warn("Malformed IPNS key. Regenerating new one.");
     }
   } catch (err) {
     console.error("Failed to load IPNS key from storage:", err);
   }
 
-  // ❗Fallback: create new key and persist in raw form
+  // Fallback: create new key and persist in raw form
   const name = await Name.create();
   const rawKeyObj = {
     name: name.toString(),
@@ -43,9 +40,9 @@ export async function publishToIPNS(name: Name.WritableName, cid: string) {
 
   try {
     const current = await Name.resolve(name);
-    revision = await Name.increment(current, value); // ✅ bump revision
+    revision = await Name.increment(current, value); // newest revision
   } catch {
-    revision = await Name.v0(name, value); // ✅ first time publishing
+    revision = await Name.v0(name, value); // first time publishing
   }
 
   await Name.publish(revision, name.key);

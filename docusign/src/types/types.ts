@@ -30,3 +30,4 @@ export interface DecodedDelegation {
   status: "valid" | "expired" | "not-yet-valid";
   nb: any;
 }
+

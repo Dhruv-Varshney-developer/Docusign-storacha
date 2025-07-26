@@ -6,4 +6,3 @@ export function validateFile(file: File) {
 }
 
 export const baseCapabilities = ['access/verify', 'upload/add'];
-// export const baseCapabilities = ['file/link', 'file/read'];
