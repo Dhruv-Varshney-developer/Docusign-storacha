@@ -10,3 +10,5 @@
   </a>
 </p>
 
+## Blog on Implementation of IPNS + IPFS hybrid approach for tracking
+[Blog Link](https://medium.com/@gulshanpr/tracking-system-using-storacha-ucans-and-ipns-f4a7566dbad7)
