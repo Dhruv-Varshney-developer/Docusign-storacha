@@ -45,9 +45,8 @@ export async function decodeDelegation(
     }
 
     const nb = capabilities[0]?.nb ?? {};
-    
-    // Extract signer name from meta
-    const signerName = capabilities[0]?.nb?.meta?.signerName || undefined;
+    // Extract signer name from nb
+    const signerName = (nb as any).signerName || undefined;
 
     return {
       audience,

@@ -7,12 +7,12 @@ import { LocalSigner } from "./signerUtils";
 export const RoleBasedAccessComponent = ({ result }: { result: any }) => {
   const [numSigners, setNumSigners] = useState(1);
   const [signers, setSigners] = useState<LocalSigner[]>([
-    { did: "", capabilities: [], deadline: "", startTime: "" },
+    { did: "", capabilities: [], deadline: "", startTime: "", name: "" },
   ]);
   const [delegated, setDelegated] = useState(false);
   const [frontendInfo, setFrontendInfo] = useState<{
     ipnsName: string;
-    secretKey: { name: string; key: number[] };
+    secretKey: string;
     delegations: any[];
   } | null>(null);
 
@@ -24,7 +24,7 @@ export const RoleBasedAccessComponent = ({ result }: { result: any }) => {
     const updated = Array.from(
       { length: count },
       (_, i) =>
-        signers[i] || { did: "", capabilities: [], deadline: "", startTime: "" }
+        signers[i] || { did: "", capabilities: [], deadline: "", startTime: "", name: "" }
     );
     setSigners(updated);
   };
@@ -51,7 +51,7 @@ export const RoleBasedAccessComponent = ({ result }: { result: any }) => {
             <p>
               <strong>Secret Key:</strong>
               <textarea
-                value={JSON.stringify(frontendInfo.secretKey, null, 2)}
+                value={frontendInfo.secretKey}
                 readOnly
                 className="w-full p-2 bg-white border text-xs rounded mt-1 font-mono"
                 rows={5}

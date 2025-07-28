@@ -20,7 +20,10 @@ export const updateSignerField = (
   setSigners: React.Dispatch<React.SetStateAction<LocalSigner[]>>
 ) => {
   const updated = [...signers];
-  updated[index][field] = value;
+  updated[index] = {
+    ...updated[index],
+    [field]: value
+  };
 
   if (field === "deadline" && index + 1 < updated.length) {
     const deadline = new Date(value);

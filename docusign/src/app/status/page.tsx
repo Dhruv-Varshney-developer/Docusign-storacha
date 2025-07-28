@@ -82,7 +82,7 @@ function processSigningData(
 const IPNSProgressTracker = () => {
     const [ipnsName, setIpnsName] = useState('');
     const [isChecking, setIsChecking] = useState(false);
-    const [progressData, setProgressData] = useState(null);
+    const [progressData, setProgressData] = useState<ProcessedSigningData | null>(null);
     const [error, setError] = useState('');
 
     const handleCheck = async () => {
@@ -107,7 +107,7 @@ const IPNSProgressTracker = () => {
             const processedData = processSigningData(delegationsData, signedData, ipnsName);
 
             setProgressData(processedData);
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error fetching signing data:", err);
             setError(err.message || 'Failed to fetch signing data');
         } finally {
@@ -122,7 +122,7 @@ const IPNSProgressTracker = () => {
         return Math.min(percentage, 100);
     };
 
-    const getStatusIcon = (status) => {
+    const getStatusIcon = (status: string) => {
         switch (status) {
             case 'signed':
                 return <CheckCircle className="w-6 h-6 text-green-500" />;
@@ -133,7 +133,7 @@ const IPNSProgressTracker = () => {
         }
     };
 
-    const getStatusColor = (status) => {
+    const getStatusColor = (status: string) => {
         switch (status) {
             case 'signed':
                 return 'bg-green-500';
@@ -144,11 +144,11 @@ const IPNSProgressTracker = () => {
         }
     };
 
-    const copyToClipboard = (text) => {
+    const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
     };
 
-    const formatDid = (did) => {
+    const formatDid = (did: string) => {
         // Show first 20 and last 10 characters for better readability
         if (did.length > 30) {
             return `${did.substring(0, 20)}...${did.substring(did.length - 10)}`;
@@ -175,7 +175,7 @@ const IPNSProgressTracker = () => {
                             value={ipnsName}
                             onChange={(e) => setIpnsName(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                            rows="3"
+                            rows={3}
                             placeholder="k51qzi5uqu5djg8j2h8xk3z9j4h5m6n7o8p9q0r1s2t3u4v5w6x7y8z9..."
                         />
                     </div>
