@@ -5,7 +5,6 @@ import React, { useState } from 'react';
 import { CheckCircle, XCircle, Clock, Copy } from 'lucide-react';
 import { getLatestCID } from '@/lib/resolve-ipns';
 import { extractJsonFromPdf } from '@/lib/read-json';
-import { processSigningData } from '@/lib/process-signing-data';
 
 interface DelegationData {
     recipientDid: string;
@@ -40,7 +39,7 @@ interface ProcessedSigningData {
     fileName: string;
 }
 
-export function processSigningData(
+function processSigningData(
     delegations: DelegationData[],
     signatures: SignedData[],
     ipnsName: string
