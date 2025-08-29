@@ -1,6 +1,6 @@
-# Docu-Sign on Storacha
+# DocumentSigner 
 
-## Docusign built on top of storacha to showcase UCAN capabilities.
+## DocumentSigner built on top of storacha to showcase UCAN capabilities.
 
 > Demo Video
 

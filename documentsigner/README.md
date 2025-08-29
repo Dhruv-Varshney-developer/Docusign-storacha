@@ -1,6 +1,6 @@
-# 🖋️ DocuSign on Storacha – UCAN-based Document Signing
+# 🖋️ DocumentSigner on Storacha – UCAN-based Document Signing
 
-**DocuSign on Storacha** is a full-stack demo application showcasing real-world UCAN (User Controlled Authorization Networks) capabilities using [Storacha](https://storacha.network/) for decentralized file storage and permission delegation.
+**DocumentSigner on Storacha** is a full-stack demo application showcasing real-world UCAN (User Controlled Authorization Networks) capabilities using [Storacha](https://storacha.network/) for decentralized file storage and permission delegation.
 
 This project enables secure, permissioned workflows for uploading, viewing, and signing PDF documents, using UCANs for cryptographically-verifiable, time-bound, and role-specific access control.
 
@@ -120,8 +120,8 @@ This application demonstrates how UCANs can replace traditional access control s
 #### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Dhruv-Varshney-developer/Docusign-storacha
-cd docusign
+git clone https://github.com/Dhruv-Varshney-developer/DocumentSigner-storacha
+cd DocumentSigner
 ```
 
 #### 2. Install dependencies

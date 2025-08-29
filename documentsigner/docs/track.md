@@ -1,6 +1,6 @@
-# Document Signing Progress Tracking — Doc-Sign
+# Document Signing Progress Tracking — DocumentSigner
 
-This guide explains how the **Doc-Sign** project implements real-time tracking of document signing progress. It covers the complete flow from IPNS resolution to signature status visualization, including data extraction from PDF files and progress calculation logic.
+This guide explains how the **DocumentSigner** project implements real-time tracking of document signing progress. It covers the complete flow from IPNS resolution to signature status visualization, including data extraction from PDF files and progress calculation logic.
 
 ## What are we building?
 
