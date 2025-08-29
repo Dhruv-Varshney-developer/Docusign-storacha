@@ -1,6 +1,6 @@
-# UCAN Delegation Decoding and Validation Flow — Doc-Sign
+# UCAN Delegation Decoding and Validation Flow — DocumentSigner
 
-This guide walks you through how the **Doc-Sign** project decodes UCAN delegation tokens, validates their time constraints, and enables sequence-based signing workflows. It covers the complete flow from raw Base64 tokens to structured validation results.
+This guide walks you through how the **DocumentSigner** project decodes UCAN delegation tokens, validates their time constraints, and enables sequence-based signing workflows. It covers the complete flow from raw Base64 tokens to structured validation results.
 
 ## What are we building?
 

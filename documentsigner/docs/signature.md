@@ -1,6 +1,6 @@
-# Digital Signature Implementation and Document Signing — Doc-Sign
+# Digital Signature Implementation and Document Signing — DocumentSigner
 
-This guide explains how the **Doc-Sign** project implements digital signature collection using HTML5 canvas, manages signature data, and uploads signed documents to Storacha with IPNS tracking. It covers the complete flow from signature capture to document versioning.
+This guide explains how the **DocumentSigner** project implements digital signature collection using HTML5 canvas, manages signature data, and uploads signed documents to Storacha with IPNS tracking. It covers the complete flow from signature capture to document versioning.
 
 ## What are we building?
 

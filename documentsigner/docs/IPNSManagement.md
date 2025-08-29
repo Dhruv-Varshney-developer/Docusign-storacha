@@ -1,6 +1,6 @@
-# IPNS Key Management and Document Tracking — Doc-Sign
+# IPNS Key Management and Document Tracking — DocumentSigner
 
-This guide explains how the **Doc-Sign** project uses IPNS (InterPlanetary Name System) for creating persistent, updatable links to documents throughout the signing process. It covers key generation, CID publishing, document tracking, and resolving the latest versions.
+This guide explains how the **DocumentSigner** project uses IPNS (InterPlanetary Name System) for creating persistent, updatable links to documents throughout the signing process. It covers key generation, CID publishing, document tracking, and resolving the latest versions.
 
 ## What is IPNS and why do we use it?
 

@@ -1,6 +1,6 @@
-# 📄 PDF Upload Flow — Doc-Sign Frontend + API Integration
+# 📄 PDF Upload Flow — DocumentSigner Frontend + API Integration
 
-This guide walks you through the PDF upload flow we use in the **Doc-Sign** project. It's a simple and reusable setup using Next.js (App Router), a drag-n-drop UI component, and Storacha for decentralized file storage.
+This guide walks you through the PDF upload flow we use in the **DocumentSigner** project. It's a simple and reusable setup using Next.js (App Router), a drag-n-drop UI component, and Storacha for decentralized file storage.
 
 ---
 

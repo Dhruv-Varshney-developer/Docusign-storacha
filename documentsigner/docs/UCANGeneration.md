@@ -1,6 +1,6 @@
-# UCAN Delegation Creation Flow — Doc-Sign Role-Based Access
+# UCAN Delegation Creation Flow — DocumentSigner Role-Based Access
 
-This guide walks you through the UCAN (User Controlled Authorization Networks) delegation creation flow in the **Doc-Sign** project. It shows how we create role-based access controls for document signing using decentralized authorization and IPNS publishing.
+This guide walks you through the UCAN (User Controlled Authorization Networks) delegation creation flow in the **DocumentSigner** project. It shows how we create role-based access controls for document signing using decentralized authorization and IPNS publishing.
 
 ## What are we building?
 
